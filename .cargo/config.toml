@@ -1,0 +1,3 @@
+[env]
+SFML_INCLUDE_DIR = { value = "D:\\Ohjelmat\\Omat_ohjelmat_rust\\tools\\SFML-2.5.1\\include", force = true }
+SFML_LIBS_DIR = { value = "D:\\Ohjelmat\\Omat_ohjelmat_rust\\tools\\SFML-2.5.1\\lib", force = true }
