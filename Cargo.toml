@@ -7,3 +7,5 @@ edition = "2021"
 
 [dependencies]
 sfml = "0.18.0"
+serde = { version = "1.0.144", features = ["derive"] }
+csv = "1.1.6"
