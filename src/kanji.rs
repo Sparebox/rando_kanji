@@ -2,17 +2,17 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-#[derive(Debug, Deserialize)]
+#[derive(Deserialize)]
 pub struct Kanji {
-    id: u32,
-    kanji: char,
-    jlpt: u8,
-    joyo_reading: String,
-    reading: String,
-    on: String,
-    kun: String,
-    on_trans: String,
-    kun_trans: String,
+    pub id: u32,
+    pub kanji: char,
+    pub jlpt: u8,
+    pub joyo_reading: String,
+    pub reading: String,
+    pub on: String,
+    pub on_trans: String,
+    pub kun: String,
+    pub kun_trans: String,
 }
 
 impl Kanji {

@@ -9,3 +9,4 @@ edition = "2021"
 sfml = "0.18.0"
 serde = { version = "1.0.144", features = ["derive"] }
 csv = "1.1.6"
+rand = "0.8.5"
