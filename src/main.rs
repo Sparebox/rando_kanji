@@ -2,7 +2,7 @@ use kanji::Kanji;
 use sfml::{
     SfBox,
     system::{Vector2f, Vector2u},
-    graphics::{Color, Font, RenderTarget, RenderWindow, Transformable, View}
+    graphics::{Color, Font, RenderTarget, RenderWindow, Transformable, View, Text}
 };
 use window::ui::{TextDescriptor, TextButton};
 use std::path::Path;
@@ -86,28 +86,14 @@ fn main() {
 
         // Draw texts
         let mut text = sfml::graphics::Text::new("", &app.font, 0);
-        for t in app.texts.iter() {
-            text.set_string(&t.string);
-            text.set_position(t.pos);
-            text.set_fill_color(t.color);
-            text.set_character_size(t.font_base_size + app.font_height);
-            if t.center {
-                let width = text.global_bounds().width;
-                let height = text.global_bounds().height;
-                text.move_(Vector2f::new(-width / 2.0, -height / 2.0));
-            }
+        for t in app.texts.iter_mut() {
+            text_from_descriptor(&mut text, t, app.font_height);
             app.window.draw(&text);
         }
         // Draw text buttons
-        for button in app.buttons.iter() {
+        for button in app.buttons.iter_mut() {
             app.window.draw(&button.shape);
-            text.set_string(&button.text.string);
-            text.set_position(button.text.pos);
-            text.set_character_size(button.text.font_base_size + app.font_height);
-            text.set_fill_color(button.text.color);
-            let width = text.global_bounds().width;
-            let height = text.global_bounds().height;
-            text.move_(Vector2f::new(-width / 2.0, -height / 2.0));
+            text_from_descriptor(&mut text, &mut button.text, app.font_height);
             app.window.draw(&text);
         }
         app.window.display();
@@ -125,7 +111,8 @@ fn create_menu(app: &mut App) {
         Vector2f::new(app.window.size().x as f32 / 2.0, height_offset + 100.0), 
         Color::WHITE,
         Color::WHITE,
-        app
+        app,
+        |app| {},
     );
     app.buttons.push(button.clone());
 
@@ -134,7 +121,21 @@ fn create_menu(app: &mut App) {
         Vector2f::new(app.window.size().x as f32 / 2.0, height_offset + 200.0),
         Color::WHITE,
         Color::WHITE,
-        app
+        app,
+        |app| app.window.close(),
     );
     app.buttons.push(button);
+}
+
+fn text_from_descriptor(sf_text: &mut Text, descriptor: &mut TextDescriptor, font_height: u32) {
+    sf_text.set_string(&descriptor.string);
+    sf_text.set_position(descriptor.pos);
+    sf_text.set_fill_color(descriptor.color);
+    sf_text.set_character_size(descriptor.font_base_size + font_height);
+    descriptor.bounds = sf_text.global_bounds();
+    if descriptor.center {
+        let width = sf_text.global_bounds().width;
+        let height = sf_text.global_bounds().height;
+        sf_text.move_(Vector2f::new(-width / 2.0, -height / 2.0));
+    }
 }
