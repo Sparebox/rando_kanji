@@ -5,7 +5,7 @@ use sfml::{
     graphics::{Color, Font, RenderTarget, RenderWindow, Transformable, View, Text}
 };
 use window::ui::{TextDescriptor, TextButton};
-use std::path::Path;
+use std::{path::Path, cell::RefCell, rc::Rc};
 use rand::prelude::*;
 
 mod kanji;
@@ -18,7 +18,7 @@ pub struct App<'a> {
     font: SfBox<Font>,
     font_height: u32,
     texts: Vec<TextDescriptor>,
-    buttons: Vec<TextButton<'a>>
+    buttons: Rc<RefCell<Vec<TextButton<'a>>>>
 }
 
 impl <'a>App<'a> {
@@ -33,7 +33,7 @@ impl <'a>App<'a> {
         let font = Font::from_file("res/font/NotoSerifJP-Black.otf").expect("Could not load font");
         let font_height = (App::FONT_MUL * win_size.y) as u32;
         let texts = Vec::new();
-        let buttons = Vec::new();
+        let buttons = Rc::new(RefCell::new(Vec::new()));
         Self {
             window,
             win_size,
@@ -57,7 +57,7 @@ impl <'a>App<'a> {
             text.pos.y = y_percentage * height;
         }
 
-        for button in self.buttons.iter_mut() {
+        for button in self.buttons.borrow_mut().iter_mut() {
             let mut pos = button.shape.position();
             let mut size = button.shape.size();
             let aspect = size.x / size.y;
@@ -91,7 +91,7 @@ fn main() {
             app.window.draw(&text);
         }
         // Draw text buttons
-        for button in app.buttons.iter_mut() {
+        for button in app.buttons.borrow_mut().iter_mut() {
             app.window.draw(&button.shape);
             text_from_descriptor(&mut text, &mut button.text, app.font_height);
             app.window.draw(&text);
@@ -114,7 +114,7 @@ fn create_menu(app: &mut App) {
         app,
         |app| {},
     );
-    app.buttons.push(button.clone());
+    app.buttons.borrow_mut().push(button.clone());
 
     button = TextButton::new(
         "Exit",
@@ -124,7 +124,7 @@ fn create_menu(app: &mut App) {
         app,
         |app| app.window.close(),
     );
-    app.buttons.push(button);
+    app.buttons.borrow_mut().push(button);
 }
 
 fn text_from_descriptor(sf_text: &mut Text, descriptor: &mut TextDescriptor, font_height: u32) {

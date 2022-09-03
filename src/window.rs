@@ -32,9 +32,9 @@ pub fn handle_events(app: &mut App) {
 }
 
 fn update_buttons(app: &mut App, mouse_pos: Vector2i, check_press: bool) {
-    for mut button in app.buttons.clone() {
+    for button in app.buttons.clone().borrow_mut().iter_mut() {
         if check_press {
-            (button.action)(app);
+            button.check_mouse_press(mouse_pos, app);
         } else {
             button.check_mouse_hover(mouse_pos);
         }
@@ -61,7 +61,7 @@ pub mod ui {
             Self {
                 string: string.to_string(),
                 pos,
-                bounds: sfml::graphics::Rect::new(0.0, 0.0, 0.0, 0.0),
+                bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
                 color,
                 font_base_size: 0,
                 center,
@@ -99,12 +99,18 @@ pub mod ui {
         pub fn check_mouse_hover(&mut self, mouse_pos: Vector2i) {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
             if self.shape.global_bounds().contains(mouse_pos) {
-                println!("Mouse over button");
                 self.shape.set_outline_color(Color::GREEN);
                 self.text.color = Color::GREEN;
             } else {
                 self.shape.set_outline_color(Color::WHITE);
                 self.text.color = Color::WHITE;
+            }
+        }
+
+        pub fn check_mouse_press(&self, mouse_pos: Vector2i, app: &mut App) {
+            let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
+            if self.shape.global_bounds().contains(mouse_pos) {
+                (self.action)(app);
             }
         }
     }

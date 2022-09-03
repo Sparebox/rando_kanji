@@ -7,15 +7,15 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug executable 'rust_game'",
+            "name": "Debug executable 'rando_kanji'",
             "cargo": {
                 "args": [
                     "build",
-                    "--bin=rust_game",
-                    "--package=rust_game"
+                    "--bin=rando_kanji",
+                    "--package=rando_kanji"
                 ],
                 "filter": {
-                    "name": "rust_game",
+                    "name": "rando_kanji",
                     "kind": "bin"
                 }
             },
@@ -25,16 +25,16 @@
         {
             "type": "lldb",
             "request": "launch",
-            "name": "Debug unit tests in executable 'rust_game'",
+            "name": "Debug unit tests in executable 'rando_kanji'",
             "cargo": {
                 "args": [
                     "test",
                     "--no-run",
-                    "--bin=rust_game",
-                    "--package=rust_game"
+                    "--bin=rando_kanji",
+                    "--package=rando_kanji"
                 ],
                 "filter": {
-                    "name": "rust_game",
+                    "name": "rando_kanji",
                     "kind": "bin"
                 }
             },

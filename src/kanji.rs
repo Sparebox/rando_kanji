@@ -7,12 +7,12 @@ pub struct Kanji {
     pub id: u32,
     pub kanji: char,
     pub jlpt: u8,
-    pub joyo_reading: String,
-    pub reading: String,
-    pub on: String,
-    pub on_trans: String,
-    pub kun: String,
-    pub kun_trans: String,
+    pub joyo_reading: Box<str>,
+    pub reading: Box<str>,
+    pub on: Box<str>,
+    pub on_trans: Box<str>,
+    pub kun: Box<str>,
+    pub kun_trans: Box<str>,
 }
 
 impl Kanji {
