@@ -1,9 +1,9 @@
 use sfml::{
     graphics::RenderWindow,
-    window::{ContextSettings, Event, Key, Style, VideoMode}, system::Vector2i,
+    window::{ContextSettings, Event, Key, Style, VideoMode},
 };
 
-use crate::App;
+use crate::{App, game_state::GameState};
 
 pub fn init() -> RenderWindow {
     let settings = ContextSettings {
@@ -19,25 +19,18 @@ pub fn init() -> RenderWindow {
     window
 }
 
-pub fn handle_events(app: &mut App) {
+pub fn handle_events(app: &mut App, game_state: &mut Box<dyn GameState>) {
+    //*game_state = Box::new(NoneState);
     while let Some(event) = app.window.poll_event() {
         match event {
-            Event::Resized { width, height } => app.on_resize(width as f32, height as f32),
-            Event::MouseButtonPressed { button, x, y } => update_buttons(app, Vector2i::new(x, y), true),
-            Event::MouseMoved { x, y } => update_buttons(app, Vector2i::new(x, y), false),
+            Event::Resized { width, height } => {
+                game_state.on_resize(width as f32, height as f32, app);
+                app.on_resize(width as f32, height as f32);
+            },
             Event::Closed | Event::KeyPressed { code: Key::Escape, .. } => app.window.close(),
             _ => { /* Do nothing */ }
         }
-    }
-}
-
-fn update_buttons(app: &mut App, mouse_pos: Vector2i, check_press: bool) {
-    for button in app.buttons.clone().borrow_mut().iter_mut() {
-        if check_press {
-            button.check_mouse_press(mouse_pos, app);
-        } else {
-            button.check_mouse_hover(mouse_pos);
-        }
+        game_state.handle_events(app, &event);
     }
 }
 
