@@ -2,8 +2,8 @@ use std::path::Path;
 
 use serde::Deserialize;
 
-#[derive(Deserialize)]
-pub struct Kanji {
+#[derive(Deserialize, Debug)]
+pub struct KanjiRecord {
     pub id: u32,
     pub kanji: char,
     pub jlpt: u8,
@@ -15,10 +15,10 @@ pub struct Kanji {
     pub kun_trans: Box<str>,
 }
 
-impl Kanji {
-    pub fn from_csv(path: &Path) -> Result<Vec<Kanji>, csv::Error> {
+impl KanjiRecord {
+    pub fn from_csv(path: &Path) -> Result<Vec<KanjiRecord>, csv::Error> {
         let mut rdr = csv::ReaderBuilder::new().delimiter(b';').from_path(path)?;
         rdr.deserialize()
-            .collect::<Result<Vec<Kanji>, csv::Error>>()
+            .collect::<Result<Vec<KanjiRecord>, csv::Error>>()
     }
 }

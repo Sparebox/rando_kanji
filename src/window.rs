@@ -1,36 +1,31 @@
 use sfml::{
     graphics::RenderWindow,
-    window::{ContextSettings, Event, Key, Style, VideoMode},
+    window::{Event, Key, Style, VideoMode},
 };
 
 use crate::{App, game_state::GameState};
 
 pub fn init() -> RenderWindow {
-    let settings = ContextSettings {
-        ..Default::default()
-    };
     let mut window = RenderWindow::new(
         VideoMode::new(App::INIT_WIN_SIZE.x, App::INIT_WIN_SIZE.y, 16),
         "Rando Kanji ・ ランド漢字",
         Style::DEFAULT,
-        &settings,
+        &Default::default(),
     );
     window.set_framerate_limit(App::FPS_LIMIT);
     window
 }
 
-pub fn handle_events(app: &mut App, game_state: &mut Box<dyn GameState>) {
-    //*game_state = Box::new(NoneState);
+pub fn handle_events(app: &mut App) {
     while let Some(event) = app.window.poll_event() {
         match event {
             Event::Resized { width, height } => {
-                game_state.on_resize(width as f32, height as f32, app);
                 app.on_resize(width as f32, height as f32);
             },
             Event::Closed | Event::KeyPressed { code: Key::Escape, .. } => app.window.close(),
             _ => { /* Do nothing */ }
         }
-        game_state.handle_events(app, &event);
+        GameState::handle_events(app, &event);
     }
 }
 
@@ -58,6 +53,19 @@ pub mod ui {
                 color,
                 font_base_size: 0,
                 center,
+            }
+        }
+
+        pub fn as_sf_text(&mut self, sf_text: &mut Text, font_height: u32) {
+            sf_text.set_string(&self.string);
+            sf_text.set_position(self.pos);
+            sf_text.set_fill_color(self.color);
+            sf_text.set_character_size(self.font_base_size + font_height);
+            self.bounds = sf_text.global_bounds();
+            if self.center {
+                let width = sf_text.global_bounds().width;
+                let height = sf_text.global_bounds().height;
+                sf_text.move_(Vector2f::new(-width / 2.0, -height / 2.0));
             }
         }
     }
