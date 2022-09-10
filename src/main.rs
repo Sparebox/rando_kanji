@@ -2,10 +2,10 @@ use game_state::{GameState::{self, Menu, Play, Options}};
 use kanji::KanjiRecord;
 use sfml::{
     SfBox,
-    system::{Vector2f, Vector2u},
+    system::{Vector2f, Vector2u, Vector2i},
     graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable}
 };
-use window::ui::{TextDescriptor, TextButton};
+use window::ui::{TextDescriptor, TextButton, ButtonAction::{self, GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}};
 use std::{path::Path, cell::RefCell, rc::Rc};
 
 mod kanji;
@@ -82,6 +82,16 @@ impl <'a>App<'a> {
         self.win_size = Vector2f::new(width, height);
     }
 
+    fn update_buttons(&mut self, mouse_pos: Vector2i, check_press: bool) {
+        for button in self.buttons.clone().borrow_mut().iter_mut() {
+            if check_press {
+                button.check_for_mouse_press(mouse_pos, self);
+            } else {
+                button.check_for_mouse_hover(mouse_pos);
+            }
+        }
+    }
+
     fn change_state(&mut self, new_state: GameState) {
         self.is_switching_state = true;
         self.current_state = new_state;
@@ -102,6 +112,15 @@ impl <'a>App<'a> {
         }
     }
 
+    fn execute_button_action(&mut self, action: &ButtonAction) {
+        match action {
+            GotoGame => self.change_state(GameState::Play),
+            GotoOptions => {},
+            GotoMenu => self.change_state(GameState::Menu),
+            CheckAnswer => {},
+            ExitGame => self.window.close(),
+        }
+    }
 }
 
 fn main() {

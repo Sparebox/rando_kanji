@@ -1,7 +1,7 @@
 use rand::{seq::{SliceRandom}, Rng};
 use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f, Vector2i}, window::Event};
 
-use crate::{window::ui::{TextDescriptor, TextButton}, App, kanji::KanjiRecord};
+use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction}, App, kanji::KanjiRecord};
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -33,7 +33,7 @@ impl GameState {
             Color::WHITE,
             Color::WHITE,
             app,
-            |app| app.change_state(GameState::Play),
+            ButtonAction::GotoGame,
         );
         app.buttons.borrow_mut().push(button.clone());
         
@@ -45,7 +45,7 @@ impl GameState {
             Color::WHITE,
             Color::WHITE,
             app,
-            |app| {},
+            ButtonAction::GotoOptions,
         );
         app.buttons.borrow_mut().push(button.clone());
 
@@ -57,7 +57,7 @@ impl GameState {
             Color::WHITE,
             Color::WHITE,
             app,
-            |app| app.window.close(),
+            ButtonAction::ExitGame,
         );
         app.buttons.borrow_mut().push(button);
     }
@@ -72,7 +72,7 @@ impl GameState {
             Color::WHITE,
             Color::WHITE,
             app,
-            |app| { app.change_state(GameState::Menu) },
+            ButtonAction::GotoMenu,
         );
         app.buttons.borrow_mut().push(back_button);
 
@@ -82,7 +82,7 @@ impl GameState {
             Color::WHITE,
             Color::WHITE,
             app,
-            |app| { app.change_state(GameState::Play) },
+            ButtonAction::GotoGame,
         );
         app.buttons.borrow_mut().push(new_button);
 
@@ -113,11 +113,11 @@ impl GameState {
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
         let mut y_offset = 0.0;
         for (i, option) in app.kanjis
-            .as_slice()
-            .choose_multiple(&mut rand::thread_rng(), 4)
-            .collect::<Vec<&KanjiRecord>>()
-            .into_iter()
-            .enumerate() {
+        .as_slice()
+        .choose_multiple(&mut rand::thread_rng(), 4)
+        .collect::<Vec<&KanjiRecord>>()
+        .into_iter()
+        .enumerate() {
             let string = if i == correct_index {
                 &kanji_record.joyo_reading
             } else {
@@ -125,36 +125,15 @@ impl GameState {
             };
             let button = TextButton::new(
                 string,
-                Vector2f::new(app.win_size.x / 2.0, 200.0 + y_offset),
+                Vector2f::new(app.win_size.x / 2.0, 300.0 + y_offset),
                 Color::WHITE,
                 Color::WHITE,
                 app,
-                |app| {},
+                ButtonAction::CheckAnswer,
             );
             app.buttons.borrow_mut().push(button);
-            y_offset += 200.0;
+            y_offset += 100.0;
         }
 
     }
-
-    pub fn handle_events(app: &mut App, event: &Event) {
-        match event {
-            Event::MouseButtonPressed { button: _, x, y } => 
-                Self::update_buttons(app, Vector2i::new(*x, *y), true),
-            Event::MouseMoved { x, y } => 
-                Self::update_buttons(app, Vector2i::new(*x, *y), false),
-            _ => {/* Do nothing */},
-        }
-    }
-
-    pub fn update_buttons(app: &mut App, mouse_pos: Vector2i, check_press: bool) {
-        for button in app.buttons.clone().borrow_mut().iter_mut() {
-            if check_press {
-                button.check_mouse_press(mouse_pos, app);
-            } else {
-                button.check_mouse_hover(mouse_pos);
-            }
-        }
-    }
-
 }
