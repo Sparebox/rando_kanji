@@ -5,7 +5,7 @@ use sfml::{
     system::{Vector2f, Vector2u, Vector2i},
     graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable}
 };
-use window::ui::{TextDescriptor, TextButton, ButtonAction::{self, GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}};
+use window::ui::{TextDescriptor, TextButton, ButtonAction::{self, GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}, ButtonData};
 use std::{path::Path, cell::RefCell, rc::Rc};
 
 mod kanji;
@@ -112,12 +112,16 @@ impl <'a>App<'a> {
         }
     }
 
-    fn execute_button_action(&mut self, action: &ButtonAction) {
+    fn execute_button_action(&mut self, action: ButtonAction) {
         match action {
             GotoGame => self.change_state(GameState::Play),
             GotoOptions => {},
             GotoMenu => self.change_state(GameState::Menu),
-            CheckAnswer => {},
+            CheckAnswer(data) => { 
+                if data.index_to_test == data.correct_index {
+                self.change_state(GameState::Play);
+                }
+            },
             ExitGame => self.window.close(),
         }
     }

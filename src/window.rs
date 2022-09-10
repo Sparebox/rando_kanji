@@ -35,12 +35,18 @@ pub mod ui {
 
     use crate::App;
 
-    #[derive(Clone)]
+    #[derive(Clone, Copy)]
+    pub struct ButtonData {
+        pub correct_index: u8,
+        pub index_to_test: u8,
+    }
+
+    #[derive(Clone, Copy)]
     pub enum ButtonAction {
         GotoGame,
         GotoOptions,
         GotoMenu,
-        CheckAnswer,
+        CheckAnswer(ButtonData),
         ExitGame,
     }
 
@@ -120,7 +126,7 @@ pub mod ui {
         pub fn check_for_mouse_press(&self, mouse_pos: Vector2i, app: &mut App) {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
             if self.shape.global_bounds().contains(mouse_pos) {
-                app.execute_button_action(&self.action);
+                app.execute_button_action(self.action);
             }
         }
     }

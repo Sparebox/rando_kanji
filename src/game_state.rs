@@ -1,7 +1,7 @@
 use rand::{seq::{SliceRandom}, Rng};
 use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f, Vector2i}, window::Event};
 
-use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction}, App, kanji::KanjiRecord};
+use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, ButtonData}, App, kanji::KanjiRecord};
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -76,16 +76,6 @@ impl GameState {
         );
         app.buttons.borrow_mut().push(back_button);
 
-        let new_button = TextButton::new(
-            "New",
-            Vector2f::new(app.win_size.x / 2.0, app.win_size.y - 200.0),
-            Color::WHITE,
-            Color::WHITE,
-            app,
-            ButtonAction::GotoGame,
-        );
-        app.buttons.borrow_mut().push(new_button);
-
         let kanji_record = app.kanjis
             .as_slice()
             .choose(&mut rand::thread_rng())
@@ -112,6 +102,7 @@ impl GameState {
 
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
         let mut y_offset = 0.0;
+
         for (i, option) in app.kanjis
         .as_slice()
         .choose_multiple(&mut rand::thread_rng(), 4)
@@ -129,11 +120,12 @@ impl GameState {
                 Color::WHITE,
                 Color::WHITE,
                 app,
-                ButtonAction::CheckAnswer,
+                ButtonAction::CheckAnswer(
+                    ButtonData {correct_index: correct_index as u8, index_to_test: i as u8}
+                ),
             );
             app.buttons.borrow_mut().push(button);
             y_offset += 100.0;
         }
-
     }
 }
