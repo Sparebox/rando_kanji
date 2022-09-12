@@ -16,7 +16,7 @@ pub fn init() -> RenderWindow {
     window
 }
 
-pub fn handle_events(app: &mut App) {
+pub fn handle_events(app: & mut App) {
     while let Some(event) = app.window.poll_event() {
         match event {
             Event::Resized { width, height } => {
@@ -122,7 +122,7 @@ pub mod ui {
 
         pub fn check_for_mouse_hover(&mut self, mouse_pos: Vector2i) {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
-            if self.text.color == Color::RED {
+            if self.text.color == Color::RED { // Ignore red color caused by a wrong answer
                 return;
             }
             if self.shape.global_bounds().contains(mouse_pos) {
@@ -134,7 +134,7 @@ pub mod ui {
             }
         }
 
-        pub fn check_for_mouse_press(&self, mouse_pos: Vector2i, app: &mut App) -> Option<ButtonAction> {
+        pub fn check_for_mouse_press(&self, mouse_pos: Vector2i) -> Option<ButtonAction> {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
             if self.shape.global_bounds().contains(mouse_pos) {
                Some(self.action)

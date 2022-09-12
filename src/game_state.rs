@@ -1,5 +1,5 @@
 use rand::{seq::{SliceRandom}, Rng};
-use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f, Vector2i}, window::Event};
+use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f}};
 
 use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, AnswerData}, App, kanji::KanjiRecord};
 
@@ -63,7 +63,7 @@ impl GameState {
     }
 
     pub fn init_play_state(app: &mut App) {
-        let mut height_offset: f32 = app.font_height as f32 * (5.0 / 3.0);
+        // let height_offset: f32 = app.font_height as f32 * (5.0 / 3.0);
         app.texts.clear();
         app.buttons.borrow_mut().clear();
         let back_button = TextButton::new(

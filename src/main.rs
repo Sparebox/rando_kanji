@@ -1,16 +1,18 @@
+use audio::{SoundBuffers, SoundPlayers};
 use game_state::{GameState::{self, Menu, Play, Options}};
 use kanji::KanjiRecord;
 use sfml::{
     SfBox,
     system::{Vector2f, Vector2u, Vector2i},
-    graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable, Shape}
+    graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable, Shape},
 };
-use window::ui::{TextDescriptor, TextButton, ButtonAction::{self, GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}, AnswerData};
+use window::ui::{TextDescriptor, TextButton, ButtonAction::{GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}};
 use std::{path::Path, cell::RefCell, rc::Rc};
 
 mod kanji;
 mod window;
 mod game_state;
+mod audio;
 
 pub struct App<'a> {
     window: RenderWindow,
@@ -22,23 +24,25 @@ pub struct App<'a> {
     buttons: Rc<RefCell<Vec<TextButton<'a>>>>,
     current_state: GameState,
     is_switching_state: bool,
+    sound_players: SoundPlayers<'a>,
 }
 
 impl <'a>App<'a> {
     const FONT_MUL: f32 = 0.05;
-    const FPS_LIMIT:u32 = 60;
-    const INIT_WIN_SIZE:Vector2u = Vector2u::new(1800, 1200);
+    const FPS_LIMIT: u32 = 60;
+    const INIT_WIN_SIZE: Vector2u = Vector2u::new(1800, 1200);
 
-    fn new() -> Self {
+    fn new(sounds: &'a SoundBuffers) -> Self {
         let window = window::init();
         let win_size = window.size().as_other();
         let kanjis = KanjiRecord::from_csv(Path::new("res/kanji_db.csv")).expect("Could not load kanjis");
         let font = Font::from_file("res/font/NotoSerifJP-Black.otf").expect("Could not load font");
         let font_height = (App::FONT_MUL * win_size.y) as u32;
-        let texts = Vec::<>::new();
+        let texts = Vec::new();
         let buttons = Rc::new(RefCell::new(Vec::new()));
         let current_state = GameState::Menu;
         let is_switching_state = false;
+        let sounds = SoundPlayers::new(sounds);
         
         Self {
             window,
@@ -50,6 +54,7 @@ impl <'a>App<'a> {
             buttons,
             current_state,
             is_switching_state,
+            sound_players: sounds,
         }
     }
 
@@ -85,14 +90,16 @@ impl <'a>App<'a> {
     fn update_buttons(&mut self, mouse_pos: Vector2i, check_press: bool) {
         for button in self.buttons.clone().borrow_mut().iter_mut() {
             if check_press {
-                match button.check_for_mouse_press(mouse_pos, self) {
+                match button.check_for_mouse_press(mouse_pos) {
                     Some(GotoGame) => self.change_state(GameState::Play),
                     Some(GotoOptions) => {},
                     Some(GotoMenu) => self.change_state(GameState::Menu),
                     Some(CheckAnswer(data)) => { 
                         if data.index_to_test == data.correct_index { // If correct reading choice
+                            self.sound_players.correct_ans.play();
                             self.change_state(GameState::Play);
                         } else {
+                            self.sound_players.incorrect_ans.play();
                             button.shape.set_outline_color(Color::RED);
                             button.text.color = Color::RED;
                         }
@@ -128,8 +135,10 @@ impl <'a>App<'a> {
 }
 
 fn main() {
-    let mut app = App::new();
+    let sounds = SoundBuffers::new();
+    let mut app = App::new(&sounds);
     app.change_state(GameState::Menu);
+    
     while app.window.is_open() {
         if app.is_switching_state {
             app.is_switching_state = false;
