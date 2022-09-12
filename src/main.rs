@@ -3,9 +3,9 @@ use kanji::KanjiRecord;
 use sfml::{
     SfBox,
     system::{Vector2f, Vector2u, Vector2i},
-    graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable}
+    graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable, Shape}
 };
-use window::ui::{TextDescriptor, TextButton, ButtonAction::{self, GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}, ButtonData};
+use window::ui::{TextDescriptor, TextButton, ButtonAction::{self, GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}, AnswerData};
 use std::{path::Path, cell::RefCell, rc::Rc};
 
 mod kanji;
@@ -85,7 +85,21 @@ impl <'a>App<'a> {
     fn update_buttons(&mut self, mouse_pos: Vector2i, check_press: bool) {
         for button in self.buttons.clone().borrow_mut().iter_mut() {
             if check_press {
-                button.check_for_mouse_press(mouse_pos, self);
+                match button.check_for_mouse_press(mouse_pos, self) {
+                    Some(GotoGame) => self.change_state(GameState::Play),
+                    Some(GotoOptions) => {},
+                    Some(GotoMenu) => self.change_state(GameState::Menu),
+                    Some(CheckAnswer(data)) => { 
+                        if data.index_to_test == data.correct_index { // If correct reading choice
+                            self.change_state(GameState::Play);
+                        } else {
+                            button.shape.set_outline_color(Color::RED);
+                            button.text.color = Color::RED;
+                        }
+                    },
+                    Some(ExitGame) => self.window.close(),
+                    None => {},
+                }
             } else {
                 button.check_for_mouse_hover(mouse_pos);
             }
@@ -109,20 +123,6 @@ impl <'a>App<'a> {
             self.window.draw(&button.shape);
             button.text.as_sf_text(&mut text, self.font_height);
             self.window.draw(&text);
-        }
-    }
-
-    fn execute_button_action(&mut self, action: ButtonAction) {
-        match action {
-            GotoGame => self.change_state(GameState::Play),
-            GotoOptions => {},
-            GotoMenu => self.change_state(GameState::Menu),
-            CheckAnswer(data) => { 
-                if data.index_to_test == data.correct_index {
-                self.change_state(GameState::Play);
-                }
-            },
-            ExitGame => self.window.close(),
         }
     }
 }

@@ -1,7 +1,7 @@
 use rand::{seq::{SliceRandom}, Rng};
 use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f, Vector2i}, window::Event};
 
-use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, ButtonData}, App, kanji::KanjiRecord};
+use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, AnswerData}, App, kanji::KanjiRecord};
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -90,16 +90,6 @@ impl GameState {
         kanji_text.font_base_size = 50;
         app.texts.push(kanji_text);
 
-        height_offset += 50.0;
-
-        let joyo_reading = TextDescriptor::new(
-            &("Kana: ".to_string() + &kanji_record.joyo_reading),
-            Vector2f::new(50.0, height_offset),
-            Color::WHITE,
-            false,
-        );
-        app.texts.push(joyo_reading);
-
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
         let mut y_offset = 0.0;
 
@@ -114,14 +104,19 @@ impl GameState {
             } else {
                 &option.joyo_reading
             };
+            let pos = Vector2f::new(app.win_size.x / 2.0, 300.0 + y_offset);
             let button = TextButton::new(
                 string,
-                Vector2f::new(app.win_size.x / 2.0, 300.0 + y_offset),
+                pos,
                 Color::WHITE,
                 Color::WHITE,
                 app,
                 ButtonAction::CheckAnswer(
-                    ButtonData {correct_index: correct_index as u8, index_to_test: i as u8}
+                    AnswerData {
+                        correct_index: correct_index as u8,
+                        index_to_test: i as u8,
+                        button_id: TextButton::generate_id_from_pos(pos),
+                    }
                 ),
             );
             app.buttons.borrow_mut().push(button);

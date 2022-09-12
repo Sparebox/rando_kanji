@@ -31,14 +31,16 @@ pub fn handle_events(app: &mut App) {
 }
 
 pub mod ui {
-    use sfml::{system::{Vector2f, Vector2i}, graphics::{Color, RectangleShape, Transformable, Shape, Text, Rect}};
+    use sfml::{system::{Vector2f, Vector2i}, graphics::{
+        Color, RectangleShape, Transformable, Shape, Text, Rect}};
 
     use crate::App;
 
     #[derive(Clone, Copy)]
-    pub struct ButtonData {
+    pub struct AnswerData {
         pub correct_index: u8,
         pub index_to_test: u8,
+        pub button_id: u8,
     }
 
     #[derive(Clone, Copy)]
@@ -46,7 +48,7 @@ pub mod ui {
         GotoGame,
         GotoOptions,
         GotoMenu,
-        CheckAnswer(ButtonData),
+        CheckAnswer(AnswerData),
         ExitGame,
     }
 
@@ -91,6 +93,7 @@ pub mod ui {
         pub text: TextDescriptor,
         pub shape: RectangleShape<'a>,
         pub action: ButtonAction,
+        pub id: u8,
     }
 
     impl <'a>TextButton<'a> {
@@ -108,12 +111,20 @@ pub mod ui {
             Self {
                 text,
                 shape,
-                action
+                action,
+                id: Self::generate_id_from_pos(pos),
             }
+        }
+
+        pub fn generate_id_from_pos(pos: Vector2f) -> u8 {
+            (pos.x + pos.y) as u8
         }
 
         pub fn check_for_mouse_hover(&mut self, mouse_pos: Vector2i) {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
+            if self.text.color == Color::RED {
+                return;
+            }
             if self.shape.global_bounds().contains(mouse_pos) {
                 self.shape.set_outline_color(Color::GREEN);
                 self.text.color = Color::GREEN;
@@ -123,10 +134,12 @@ pub mod ui {
             }
         }
 
-        pub fn check_for_mouse_press(&self, mouse_pos: Vector2i, app: &mut App) {
+        pub fn check_for_mouse_press(&self, mouse_pos: Vector2i, app: &mut App) -> Option<ButtonAction> {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
             if self.shape.global_bounds().contains(mouse_pos) {
-                app.execute_button_action(self.action);
+               Some(self.action)
+            } else {
+                None
             }
         }
     }
