@@ -123,4 +123,30 @@ impl GameState {
             y_offset += 100.0;
         }
     }
+
+    pub fn init_options_state(app: &mut App) {
+        app.texts.clear();
+        app.buttons.borrow_mut().clear();
+
+        let romaji_button = TextButton::new(
+            "Toggle Rōmaji ローマ字",
+            Vector2f::new(app.win_size.x / 4.0, 100.0),
+            Color::WHITE,
+            Color::WHITE,
+            app,
+            ButtonAction::ToggleRomaji,
+        );
+
+        app.buttons.borrow_mut().push(romaji_button);
+
+        let back_button = TextButton::new(
+            "Back",
+            Vector2f::new(app.win_size.x / 2.0, app.win_size.y - 100.0),
+            Color::WHITE,
+            Color::WHITE,
+            app,
+            ButtonAction::GotoMenu,
+        );
+        app.buttons.borrow_mut().push(back_button);
+    }
 }

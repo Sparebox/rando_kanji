@@ -49,6 +49,7 @@ pub mod ui {
         GotoOptions,
         GotoMenu,
         CheckAnswer(AnswerData),
+        ToggleRomaji,
         ExitGame,
     }
 

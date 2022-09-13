@@ -1,4 +1,5 @@
 use audio::{SoundBuffers, SoundPlayers};
+use config::Config;
 use game_state::{GameState::{self, Menu, Play, Options}};
 use kanji::KanjiRecord;
 use sfml::{
@@ -6,17 +7,19 @@ use sfml::{
     system::{Vector2f, Vector2u, Vector2i},
     graphics::{Color, Font, RenderTarget, RenderWindow, View, Text, Transformable, Shape},
 };
-use window::ui::{TextDescriptor, TextButton, ButtonAction::{GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions}};
+use window::ui::{TextDescriptor, TextButton, ButtonAction::{GotoGame, GotoMenu, CheckAnswer, ExitGame, GotoOptions, ToggleRomaji}};
 use std::{path::Path, cell::RefCell, rc::Rc};
 
 mod kanji;
 mod window;
 mod game_state;
 mod audio;
+mod config;
 
 pub struct App<'a> {
     window: RenderWindow,
     win_size: Vector2f,
+    config: Config,
     kanjis: Vec<KanjiRecord>,
     font: SfBox<Font>,
     font_height: u32,
@@ -31,12 +34,20 @@ impl <'a>App<'a> {
     const FONT_MUL: f32 = 0.05;
     const FPS_LIMIT: u32 = 60;
     const INIT_WIN_SIZE: Vector2u = Vector2u::new(1800, 1200);
+    const CONFIG_PATH: &'a str = "./config.json";
 
     fn new(sounds: &'a SoundBuffers) -> Self {
         let window = window::init();
         let win_size = window.size().as_other();
-        let kanjis = KanjiRecord::from_csv(Path::new("res/kanji_db.csv")).expect("Could not load kanjis");
-        let font = Font::from_file("res/font/NotoSerifJP-Black.otf").expect("Could not load font");
+        let config = 
+            match Config::from_file(App::CONFIG_PATH) {
+                Ok(config) => config,
+                Err(_) => Config::default(),
+            };
+        let kanjis = KanjiRecord::from_csv(Path::new("res/kanji_db.csv"))
+            .expect("Could not load kanjis");
+        let font = Font::from_file("res/font/NotoSerifJP-Black.otf")
+            .expect("Could not load font");
         let font_height = (App::FONT_MUL * win_size.y) as u32;
         let texts = Vec::new();
         let buttons = Rc::new(RefCell::new(Vec::new()));
@@ -47,6 +58,7 @@ impl <'a>App<'a> {
         Self {
             window,
             win_size,
+            config,
             kanjis,
             font,
             font_height,
@@ -59,7 +71,10 @@ impl <'a>App<'a> {
     }
 
     fn on_resize(&mut self, width: f32, height: f32) {
-        let view = View::new(Vector2f::new(width / 2.0, height / 2.0), Vector2f::new(width, height));
+        let view = View::new(
+            Vector2f::new(width / 2.0, height / 2.0),
+            Vector2f::new(width, height)
+        );
         self.window.set_view(&view);
         self.font_height = (App::FONT_MUL * height) as u32;
         for text in self.texts.iter_mut() {
@@ -91,9 +106,9 @@ impl <'a>App<'a> {
         for button in self.buttons.clone().borrow_mut().iter_mut() {
             if check_press {
                 match button.check_for_mouse_press(mouse_pos) {
-                    Some(GotoGame) => self.change_state(GameState::Play),
-                    Some(GotoOptions) => {},
-                    Some(GotoMenu) => self.change_state(GameState::Menu),
+                    Some(GotoGame)     => self.change_state(GameState::Play),
+                    Some(GotoOptions)  => self.change_state(GameState::Options),
+                    Some(GotoMenu)     => self.change_state(GameState::Menu),
                     Some(CheckAnswer(data)) => { 
                         if data.index_to_test == data.correct_index { // If correct reading choice
                             self.sound_players.correct_ans.play();
@@ -104,6 +119,7 @@ impl <'a>App<'a> {
                             button.text.color = Color::RED;
                         }
                     },
+                    Some(ToggleRomaji) => {},
                     Some(ExitGame) => self.window.close(),
                     None => {},
                 }
@@ -144,7 +160,7 @@ fn main() {
             app.is_switching_state = false;
             match app.current_state {
                 Menu => { GameState::init_menu_state(&mut app) },
-                Options => { },
+                Options => { GameState::init_options_state(&mut app) },
                 Play => { GameState::init_play_state(&mut app) },
             }
         }
@@ -153,5 +169,7 @@ fn main() {
         app.draw();
         app.window.display();
     }
+    // Save configurations to disk
+    app.config.to_file(App::CONFIG_PATH);
 }
 

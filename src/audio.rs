@@ -6,10 +6,10 @@ pub struct SoundPlayers<'a> {
 }
 
 impl <'a>SoundPlayers<'a> {
-    pub fn new(sounds: &'a SoundBuffers) -> Self {
+    pub fn new(sound_buffers: &'a SoundBuffers) -> Self {
         Self {
-            correct_ans: Sound::with_buffer(&sounds.correct_ans),
-            incorrect_ans: Sound::with_buffer(&sounds.incorrect_ans),
+            correct_ans: Sound::with_buffer(&sound_buffers.correct_ans),
+            incorrect_ans: Sound::with_buffer(&sound_buffers.incorrect_ans),
         }
     }
 }
