@@ -95,6 +95,7 @@ pub mod ui {
         pub shape: RectangleShape<'a>,
         pub action: ButtonAction,
         pub id: u8,
+        color_overridden: bool,
     }
 
     impl <'a>TextButton<'a> {
@@ -114,6 +115,7 @@ pub mod ui {
                 shape,
                 action,
                 id: Self::generate_id_from_pos(pos),
+                color_overridden: false,
             }
         }
 
@@ -123,15 +125,13 @@ pub mod ui {
 
         pub fn check_for_mouse_hover(&mut self, mouse_pos: Vector2i) {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
-            if self.text.color == Color::RED { // Ignore red color caused by a wrong answer
+            if self.color_overridden {
                 return;
             }
             if self.shape.global_bounds().contains(mouse_pos) {
-                self.shape.set_outline_color(Color::GREEN);
-                self.text.color = Color::GREEN;
+                self.set_color(Color::GREEN, false);
             } else {
-                self.shape.set_outline_color(Color::WHITE);
-                self.text.color = Color::WHITE;
+                self.set_color(Color::WHITE, false);
             }
         }
 
@@ -142,6 +142,12 @@ pub mod ui {
             } else {
                 None
             }
+        }
+
+        pub fn set_color(&mut self, color: Color, lock_color: bool) {
+            self.color_overridden = lock_color;
+            self.shape.set_outline_color(color);
+            self.text.color = color;
         }
     }
 }

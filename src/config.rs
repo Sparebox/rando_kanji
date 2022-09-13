@@ -18,9 +18,12 @@ impl Config {
 
     pub fn to_file(&self, path: &str) {
         let path = Path::new(path);
-        let file = File::create(path)
-            .expect("Could not save config file");
-        let writer = BufWriter::new(file);
-        serde_json::to_writer(writer, self).unwrap();
+        match File::create(path) {
+            Ok(file) => {
+                let writer = BufWriter::new(file);
+                let _ = serde_json::to_writer(writer, self);
+            },
+            Err(err) => eprintln!("{}", err),
+        };
     }
 }

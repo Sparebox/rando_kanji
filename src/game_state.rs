@@ -99,14 +99,21 @@ impl GameState {
         .collect::<Vec<&KanjiRecord>>()
         .into_iter()
         .enumerate() {
-            let string = if i == correct_index {
-                &kanji_record.joyo_reading
+
+            let button_string: String = if i == correct_index {
+                if app.config.romaji_enabled {
+                    kanji_record.as_romaji()
+                } else {
+                    kanji_record.joyo_reading.clone()
+                }
+            } else if app.config.romaji_enabled {
+                option.as_romaji()
             } else {
-                &option.joyo_reading
+                option.joyo_reading.clone()
             };
             let pos = Vector2f::new(app.win_size.x / 2.0, 300.0 + y_offset);
             let button = TextButton::new(
-                string,
+                &button_string,
                 pos,
                 Color::WHITE,
                 Color::WHITE,
@@ -128,7 +135,7 @@ impl GameState {
         app.texts.clear();
         app.buttons.borrow_mut().clear();
 
-        let romaji_button = TextButton::new(
+        let mut romaji_button = TextButton::new(
             "Toggle Rōmaji ローマ字",
             Vector2f::new(app.win_size.x / 4.0, 100.0),
             Color::WHITE,
@@ -136,6 +143,10 @@ impl GameState {
             app,
             ButtonAction::ToggleRomaji,
         );
+
+        if app.config.romaji_enabled {
+            romaji_button.set_color(Color::GREEN, true);
+        }
 
         app.buttons.borrow_mut().push(romaji_button);
 

@@ -115,11 +115,17 @@ impl <'a>App<'a> {
                             self.change_state(GameState::Play);
                         } else {
                             self.sound_players.incorrect_ans.play();
-                            button.shape.set_outline_color(Color::RED);
-                            button.text.color = Color::RED;
+                            button.set_color(Color::RED, true);
                         }
                     },
-                    Some(ToggleRomaji) => {},
+                    Some(ToggleRomaji) => { 
+                        if self.config.romaji_enabled {
+                            button.set_color(Color::WHITE, false);
+                        } else {
+                            button.set_color(Color::GREEN, true);
+                        }
+                        self.config.romaji_enabled = !self.config.romaji_enabled;
+                    },
                     Some(ExitGame) => self.window.close(),
                     None => {},
                 }
@@ -155,6 +161,7 @@ fn main() {
     let mut app = App::new(&sounds);
     app.change_state(GameState::Menu);
     
+    // Update loop
     while app.window.is_open() {
         if app.is_switching_state {
             app.is_switching_state = false;
