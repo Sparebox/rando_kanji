@@ -1,7 +1,7 @@
 use rand::{seq::{SliceRandom}, Rng};
 use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f}};
 
-use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, AnswerData}, App, kanji::KanjiRecord};
+use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, AnswerData}, app::App, kanji::KanjiRecord};
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -123,6 +123,7 @@ impl GameState {
                         correct_index: correct_index as u8,
                         index_to_test: i as u8,
                         button_id: TextButton::generate_id_from_pos(pos),
+                        kanji: kanji_record.kanji,
                     }
                 ),
             );
@@ -149,6 +150,17 @@ impl GameState {
         }
 
         app.buttons.borrow_mut().push(romaji_button);
+        
+        let reset_config_button = TextButton::new(
+            "Reset configurations",
+            Vector2f::new(3.0 * app.win_size.x / 4.0, 100.0),
+            Color::WHITE,
+            Color::WHITE,
+            app,
+            ButtonAction::ResetConfig,
+        );
+
+        app.buttons.borrow_mut().push(reset_config_button);
 
         let back_button = TextButton::new(
             "Back",

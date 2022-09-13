@@ -15,13 +15,13 @@ impl <'a>SoundPlayers<'a> {
 }
 
 pub struct SoundBuffers {
-    pub correct_ans: SfBox<SoundBuffer>,
-    pub incorrect_ans: SfBox<SoundBuffer>,
+    correct_ans: SfBox<SoundBuffer>,
+    incorrect_ans: SfBox<SoundBuffer>,
 }
 
 impl SoundBuffers {
     pub fn new() -> Self{
-        let message = "Could not load sound";
+        let message = "Error while loading sounds";
         let correct_ans = SoundBuffer::from_file("res/sounds/correct.wav")
             .expect(message);
         let incorrect_ans = SoundBuffer::from_file("res/sounds/incorrect.wav")

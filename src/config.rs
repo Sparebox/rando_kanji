@@ -1,10 +1,11 @@
-use std::{path::Path, fs::File, io::{BufReader, BufWriter}, error::Error};
+use std::{path::Path, fs::File, io::{BufReader, BufWriter}, error::Error, collections::HashMap};
 
 use serde::{Serialize, Deserialize};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
-    pub romaji_enabled: bool
+    pub romaji_enabled: bool,
+    pub answer_statistics: HashMap<char, i32>,
 }
 
 impl Config {

@@ -3,7 +3,7 @@ use sfml::{
     window::{Event, Key, Style, VideoMode}, system::Vector2i,
 };
 
-use crate::App;
+use crate::app::App;
 
 pub fn init() -> RenderWindow {
     let mut window = RenderWindow::new(
@@ -34,13 +34,15 @@ pub mod ui {
     use sfml::{system::{Vector2f, Vector2i}, graphics::{
         Color, RectangleShape, Transformable, Shape, Text, Rect}};
 
-    use crate::App;
+    use crate::app::App;
+
 
     #[derive(Clone, Copy)]
     pub struct AnswerData {
         pub correct_index: u8,
         pub index_to_test: u8,
         pub button_id: u8,
+        pub kanji: char,
     }
 
     #[derive(Clone, Copy)]
@@ -50,6 +52,7 @@ pub mod ui {
         GotoMenu,
         CheckAnswer(AnswerData),
         ToggleRomaji,
+        ResetConfig,
         ExitGame,
     }
 
@@ -149,5 +152,10 @@ pub mod ui {
             self.shape.set_outline_color(color);
             self.text.color = color;
         }
+
+        pub fn get_width(&self) -> f32 {
+            self.shape.size().x
+        }
+        
     }
 }
