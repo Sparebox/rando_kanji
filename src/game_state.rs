@@ -1,7 +1,7 @@
 use rand::{seq::{SliceRandom}, Rng};
 use sfml::{graphics::{RenderTarget, Color}, system::{Vector2f}};
 
-use crate::{window::ui::{TextDescriptor, TextButton, ButtonAction, AnswerData}, app::App, kanji::KanjiRecord};
+use crate::{window::{ui::{TextDescriptor, TextButton, ButtonAction, AnswerData}, ViewEnum}, app::App, kanji::KanjiRecord};
 
 #[derive(Clone, Copy)]
 #[repr(u8)]
@@ -14,9 +14,10 @@ pub enum GameState {
 impl GameState {
 
     pub fn init_menu_state(app: &mut App) {
+        app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
-        let mut height_offset: f32 = app.font_height as f32 * (5.0 / 3.0);
+        let mut height_offset: f32 = App::FONT_SIZE as f32 * (5.0 / 3.0);
         let mut title = TextDescriptor::new(
             "Rando Kanji ・ ランド漢字",
             Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
@@ -34,6 +35,7 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::GotoGame,
+            ViewEnum::DefaultView,
         );
         app.buttons.borrow_mut().push(button.clone());
         
@@ -46,6 +48,7 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::GotoOptions,
+            ViewEnum::DefaultView,
         );
         app.buttons.borrow_mut().push(button.clone());
 
@@ -58,12 +61,14 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::ExitGame,
+            ViewEnum::DefaultView,
         );
         app.buttons.borrow_mut().push(button);
     }
 
     pub fn init_play_state(app: &mut App) {
         // let height_offset: f32 = app.font_height as f32 * (5.0 / 3.0);
+        app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
         let back_button = TextButton::new(
@@ -73,6 +78,7 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::GotoMenu,
+            ViewEnum::DefaultView,
         );
         app.buttons.borrow_mut().push(back_button);
 
@@ -92,6 +98,7 @@ impl GameState {
 
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
         let mut y_offset = 0.0;
+        let mut last_btn_height = 0.0;
 
         for (i, option) in app.kanjis
         .as_slice()
@@ -111,7 +118,7 @@ impl GameState {
             } else {
                 option.joyo_reading.clone()
             };
-            let pos = Vector2f::new(app.win_size.x / 2.0, 300.0 + y_offset);
+            let pos = Vector2f::new(app.win_size.x / 2.0, 200.0 + last_btn_height);
             let button = TextButton::new(
                 &button_string,
                 pos,
@@ -126,9 +133,12 @@ impl GameState {
                         kanji: kanji_record.kanji,
                     }
                 ),
+                ViewEnum::GameButtonsView,
             );
+            last_btn_height = (i + 1) as f32 * (button.get_height() + 50.0);
             app.buttons.borrow_mut().push(button);
-            y_offset += 100.0;
+            y_offset += 200.0;
+            
         }
     }
 
@@ -143,6 +153,7 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::ToggleRomaji,
+            ViewEnum::DefaultView,
         );
 
         if app.config.romaji_enabled {
@@ -158,6 +169,7 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::ResetConfig,
+            ViewEnum::DefaultView,
         );
 
         app.buttons.borrow_mut().push(reset_config_button);
@@ -169,6 +181,7 @@ impl GameState {
             Color::WHITE,
             app,
             ButtonAction::GotoMenu,
+            ViewEnum::DefaultView,
         );
         app.buttons.borrow_mut().push(back_button);
     }

@@ -1,5 +1,5 @@
 use sfml::{
-    graphics::RenderWindow,
+    graphics::{RenderWindow},
     window::{Event, Key, Style, VideoMode}, system::Vector2i,
 };
 
@@ -9,19 +9,17 @@ pub fn init() -> RenderWindow {
     let mut window = RenderWindow::new(
         VideoMode::new(App::INIT_WIN_SIZE.x, App::INIT_WIN_SIZE.y, 16),
         "Rando Kanji ・ ランド漢字",
-        Style::DEFAULT,
+        Style::CLOSE,
         &Default::default(),
     );
     window.set_framerate_limit(App::FPS_LIMIT);
     window
 }
 
-pub fn handle_events(app: & mut App) {
+pub fn handle_events(app: &mut App) {
     while let Some(event) = app.window.poll_event() {
+        app.egui.add_event(&event);
         match event {
-            Event::Resized { width, height } => {
-                app.on_resize(width as f32, height as f32);
-            },
             Event::Closed | Event::KeyPressed { code: Key::Escape, .. } => app.window.close(),
             Event::MouseButtonPressed { button: _, x, y } => app.update_buttons(Vector2i::new(x, y), true),
             Event::MouseMoved { x, y } => app.update_buttons(Vector2i::new(x, y), false),
@@ -30,12 +28,19 @@ pub fn handle_events(app: & mut App) {
     }
 }
 
+#[derive(Clone, Copy)]
+pub enum ViewEnum {
+    GameButtonsView,
+    DefaultView,
+}
+
 pub mod ui {
     use sfml::{system::{Vector2f, Vector2i}, graphics::{
-        Color, RectangleShape, Transformable, Shape, Text, Rect}};
+        Color, RectangleShape, Transformable, Shape, Text, Rect, RenderTarget, RenderWindow}};
 
     use crate::app::App;
 
+    use super::ViewEnum;
 
     #[derive(Clone, Copy)]
     pub struct AnswerData {
@@ -78,11 +83,11 @@ pub mod ui {
             }
         }
 
-        pub fn as_sf_text(&mut self, sf_text: &mut Text, font_height: u32) {
+        pub fn as_sf_text(&mut self, sf_text: &mut Text) {
             sf_text.set_string(&self.string);
             sf_text.set_position(self.pos);
             sf_text.set_fill_color(self.color);
-            sf_text.set_character_size(self.font_base_size + font_height);
+            sf_text.set_character_size(self.font_base_size + App::FONT_SIZE);
             self.bounds = sf_text.global_bounds();
             if self.center {
                 let width = sf_text.global_bounds().width;
@@ -96,27 +101,37 @@ pub mod ui {
     pub struct TextButton<'a> {
         pub text: TextDescriptor,
         pub shape: RectangleShape<'a>,
+        pub view_index: ViewEnum,
         pub action: ButtonAction,
         pub id: u8,
         color_overridden: bool,
     }
 
     impl <'a>TextButton<'a> {
-        pub fn new(string: &str, pos: Vector2f, fg_color: Color, bg_color: Color, app: &App, action: ButtonAction) -> Self {
+        pub fn new(
+            string: &str, 
+            pos: Vector2f, 
+            fg_color: Color, 
+            bg_color: Color, 
+            app: &App, 
+            action: ButtonAction,
+            view_index: ViewEnum,
+        ) -> Self {
             let text = TextDescriptor::new(string, pos, fg_color, true);
-            let mut button_dimensions = Text::new(string, &app.font, app.font_height).global_bounds();
-            button_dimensions.width += app.font_height as f32 / 2.0;
-            button_dimensions.height += app.font_height as f32 / 2.0;
+            let mut button_dimensions = Text::new(string, &app.font, App::FONT_SIZE).global_bounds();
+            button_dimensions.width += App::FONT_SIZE as f32 / 2.0;
+            button_dimensions.height += App::FONT_SIZE as f32 / 2.0;
 
             let mut shape = RectangleShape::from_rect(button_dimensions);
             shape.set_position(pos - button_dimensions.size() / 2.0 + Vector2f::new(0.0, 10.0));
             shape.set_outline_color(bg_color);
-            shape.set_outline_thickness(1.0);
+            shape.set_outline_thickness(2.0);
             shape.set_fill_color(Color::TRANSPARENT);
             Self {
                 text,
                 shape,
                 action,
+                view_index,
                 id: Self::generate_id_from_pos(pos),
                 color_overridden: false,
             }
@@ -156,6 +171,16 @@ pub mod ui {
         pub fn get_width(&self) -> f32 {
             self.shape.size().x
         }
-        
+
+        pub fn get_height(&self) -> f32 {
+            self.shape.size().y
+        }
+
+        pub fn draw(&mut self, window: &mut RenderWindow, text: &mut Text) {
+            self.text.as_sf_text(text);
+            window.draw(&self.shape);
+            window.draw(text);
+        }
+
     }
 }

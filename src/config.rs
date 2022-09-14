@@ -5,6 +5,7 @@ use serde::{Serialize, Deserialize};
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
     pub romaji_enabled: bool,
+    pub learned_threshold: i32, // Amount of correct answers for a kanji to be considered learned
     pub answer_statistics: HashMap<char, i32>,
 }
 

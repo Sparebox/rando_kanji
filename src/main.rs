@@ -1,5 +1,6 @@
 use app::App;
 use audio::SoundBuffers;
+use egui_sfml::egui;
 use game_state::{GameState::{self, Menu, Play, Options}};
 use sfml::graphics::{Color, RenderTarget};
 
@@ -25,9 +26,11 @@ fn main() {
                 Play    => GameState::init_play_state(&mut app),
             }
         }
+
         app.window.clear(Color::rgb(10, 10, 10));
         window::handle_events(&mut app);
         app.draw();
+        //app.egui.draw(&mut app.window, None);
         app.window.display();
     }
     // Save configurations to disk
