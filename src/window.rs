@@ -35,12 +35,75 @@ pub enum ViewEnum {
 }
 
 pub mod ui {
+    use egui_sfml::egui::{self, Context, TextStyle, FontFamily, FontId};
     use sfml::{system::{Vector2f, Vector2i}, graphics::{
         Color, RectangleShape, Transformable, Shape, Text, Rect, RenderTarget, RenderWindow}};
 
-    use crate::app::App;
+    use crate::{app::App, game_state::GameState::{self}, config::Config};
 
     use super::ViewEnum;
+
+    pub fn draw(app: &mut App) {
+        app.egui.do_frame(|ctx|{
+            match app.current_state {
+                GameState::Menu => {},
+                GameState::Play => {},
+                GameState::Options => add_options_egui(
+                    &mut app.config,
+                    &mut app.current_state,
+                    &mut app.is_switching_state,
+                    ctx
+                ),
+            }
+        });
+        app.egui.draw(&mut app.window, None);
+    }
+
+    pub fn set_custom_egui_font(ctx: &Context) {
+        let mut font_defs = egui::FontDefinitions::default();
+        font_defs.font_data.insert(
+            "Honoka-Shin".to_string(),
+            egui::FontData::from_static(include_bytes!("../res/font/Honoka-Shin-Antique-Maru_R.otf"))
+        );
+        font_defs
+            .families
+            .entry(egui::FontFamily::Proportional)
+            .or_default()
+            .insert(0, "Honoka-Shin".to_string());
+        
+        let mut style = (*ctx.style()).clone();
+        style.text_styles = [
+            (TextStyle::Heading, FontId::new(30.0, FontFamily::Proportional)),
+            (TextStyle::Body, FontId::new(50.0, FontFamily::Proportional)),
+            (TextStyle::Monospace, FontId::new(14.0, FontFamily::Proportional)),
+            (TextStyle::Button, FontId::new(50.0, FontFamily::Proportional)),
+            (TextStyle::Small, FontId::new(10.0, FontFamily::Proportional)),
+        ]
+        .into();
+        style.spacing.item_spacing = egui::vec2(20.0, 20.0);
+        ctx.set_fonts(font_defs);
+        ctx.set_style(style);
+    }
+
+    fn add_options_egui(config: &mut Config, state: &mut GameState, is_switching_state: &mut bool, ctx: &Context) {
+        egui::Area::new("Configurations")
+            .movable(false)
+            .show(ctx, |ui| {
+                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                    ui.checkbox(&mut config.romaji_enabled, "Toggle Rōmaji ローマ字");
+                });
+                ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
+                    ui.add_space(20.0);
+                    if ui.button("Back").clicked() {
+                        *state = GameState::Menu;
+                        *is_switching_state = true;
+                    }
+                    if ui.button("Reset configurations").clicked() {
+                        *config = Config::default();
+                    }
+                });
+        });
+    }
 
     #[derive(Clone, Copy)]
     pub struct AnswerData {
@@ -56,8 +119,6 @@ pub mod ui {
         GotoOptions,
         GotoMenu,
         CheckAnswer(AnswerData),
-        ToggleRomaji,
-        ResetConfig,
         ExitGame,
     }
 
@@ -101,7 +162,7 @@ pub mod ui {
     pub struct TextButton<'a> {
         pub text: TextDescriptor,
         pub shape: RectangleShape<'a>,
-        pub view_index: ViewEnum,
+        pub view: ViewEnum,
         pub action: ButtonAction,
         pub id: u8,
         color_overridden: bool,
@@ -115,7 +176,7 @@ pub mod ui {
             bg_color: Color, 
             app: &App, 
             action: ButtonAction,
-            view_index: ViewEnum,
+            view: ViewEnum,
         ) -> Self {
             let text = TextDescriptor::new(string, pos, fg_color, true);
             let mut button_dimensions = Text::new(string, &app.font, App::FONT_SIZE).global_bounds();
@@ -131,7 +192,7 @@ pub mod ui {
                 text,
                 shape,
                 action,
-                view_index,
+                view,
                 id: Self::generate_id_from_pos(pos),
                 color_overridden: false,
             }

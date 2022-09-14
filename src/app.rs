@@ -3,7 +3,7 @@ use std::{cell::RefCell, rc::Rc, path::Path};
 use egui_sfml::SfEgui;
 use sfml::{graphics::{RenderWindow, Font, RenderTarget, Color, Text, View}, system::{Vector2f, Vector2u, Vector2i}, SfBox};
 
-use crate::{config::Config, kanji::KanjiRecord, window::{ui::{TextDescriptor, TextButton, ButtonAction::{GotoGame, GotoOptions, GotoMenu, ExitGame, ToggleRomaji, ResetConfig}, AnswerData}, self, ViewEnum}, game_state::GameState, audio::{SoundPlayers, SoundBuffers}};
+use crate::{config::Config, kanji::KanjiRecord, window::{ui::{TextDescriptor, TextButton, ButtonAction::{GotoGame, GotoOptions, GotoMenu, ExitGame}, AnswerData, self}, self, ViewEnum}, game_state::GameState, audio::{SoundPlayers, SoundBuffers}};
 use crate::window::ui::ButtonAction::CheckAnswer;
 
 pub struct App<'a> {
@@ -13,7 +13,7 @@ pub struct App<'a> {
     pub win_size: Vector2f,
     pub config: Config,
     pub kanjis: Vec<KanjiRecord>,
-    pub font: sfml::SfBox<Font>,
+    pub font: SfBox<Font>,
     pub texts: Vec<TextDescriptor>,
     pub buttons: Rc<RefCell<Vec<TextButton<'a>>>>,
     pub current_state: GameState,
@@ -26,9 +26,9 @@ impl <'a>App<'a> {
     pub const FPS_LIMIT: u32 = 30;
     pub const FONT_SIZE: u32 = 50;
     pub const INIT_WIN_SIZE: Vector2u = Vector2u::new(1600, 900);
-    pub const KANJI_DB_PATH: &'a str = "res/kanji_db.csv";
-    pub const FONT_PATH: &'a str = "res/font/NotoSerifJP-Black.otf";
-    pub const CONFIG_PATH: &'a str = "./config.json";
+    pub const KANJI_DB_PATH: &'static str = "res/kanji_db.csv";
+    pub const FONT_PATH: &'static str = "res/font/Honoka-Shin-Antique-Maru_R.otf";
+    pub const CONFIG_PATH: &'static str = "./config.json";
 
     pub fn new(sounds: &'a SoundBuffers) -> Self {
         let mut window = window::init();
@@ -57,6 +57,7 @@ impl <'a>App<'a> {
         let is_switching_state = false;
         let sounds = SoundPlayers::new(sounds);
         let egui = SfEgui::new(&window);
+        ui::set_custom_egui_font(egui.context());
         
         Self {
             window,
@@ -104,19 +105,6 @@ impl <'a>App<'a> {
                     Some(GotoOptions)  => self.change_state(GameState::Options),
                     Some(GotoMenu)     => self.change_state(GameState::Menu),
                     Some(CheckAnswer(data)) => self.check_answer(button, &data),
-                    Some(ToggleRomaji) => { 
-                        if self.config.romaji_enabled {
-                            button.set_color(Color::WHITE, false);
-                        } else {
-                            button.set_color(Color::GREEN, true);
-                        }
-                        self.config.romaji_enabled = !self.config.romaji_enabled;
-                    },
-                    Some(ResetConfig) => {
-                        self.config = Config::default();
-                        self.change_state(GameState::Options);
-                        button.set_color(Color::GREEN, true);
-                    },
                     Some(ExitGame) => self.window.close(),
                     None => {},
                 }
@@ -141,7 +129,7 @@ impl <'a>App<'a> {
         }
         // Draw text buttons
         for button in self.buttons.borrow_mut().iter_mut() {
-            match button.view_index {
+            match button.view {
                 ViewEnum::GameButtonsView => self.window.set_view(&self.game_view),
                 ViewEnum::DefaultView => self.window.set_view(&self.main_view),
             }

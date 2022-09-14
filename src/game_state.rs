@@ -97,7 +97,6 @@ impl GameState {
         app.texts.push(kanji_text);
 
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
-        let mut y_offset = 0.0;
         let mut last_btn_height = 0.0;
 
         for (i, option) in app.kanjis
@@ -137,8 +136,6 @@ impl GameState {
             );
             last_btn_height = (i + 1) as f32 * (button.get_height() + 50.0);
             app.buttons.borrow_mut().push(button);
-            y_offset += 200.0;
-            
         }
     }
 
@@ -146,43 +143,43 @@ impl GameState {
         app.texts.clear();
         app.buttons.borrow_mut().clear();
 
-        let mut romaji_button = TextButton::new(
-            "Toggle Rōmaji ローマ字",
-            Vector2f::new(app.win_size.x / 4.0, 100.0),
-            Color::WHITE,
-            Color::WHITE,
-            app,
-            ButtonAction::ToggleRomaji,
-            ViewEnum::DefaultView,
-        );
+        // let mut romaji_button = TextButton::new(
+        //     "Toggle Rōmaji ローマ字",
+        //     Vector2f::new(app.win_size.x / 4.0, 100.0),
+        //     Color::WHITE,
+        //     Color::WHITE,
+        //     app,
+        //     ButtonAction::ToggleRomaji,
+        //     ViewEnum::DefaultView,
+        // );
 
-        if app.config.romaji_enabled {
-            romaji_button.set_color(Color::GREEN, true);
-        }
+        // if app.config.romaji_enabled {
+        //     romaji_button.set_color(Color::GREEN, true);
+        // }
 
-        app.buttons.borrow_mut().push(romaji_button);
+        // app.buttons.borrow_mut().push(romaji_button);
         
-        let reset_config_button = TextButton::new(
-            "Reset configurations",
-            Vector2f::new(3.0 * app.win_size.x / 4.0, 100.0),
-            Color::WHITE,
-            Color::WHITE,
-            app,
-            ButtonAction::ResetConfig,
-            ViewEnum::DefaultView,
-        );
+        // let reset_config_button = TextButton::new(
+        //     "Reset configurations",
+        //     Vector2f::new(3.0 * app.win_size.x / 4.0, 100.0),
+        //     Color::WHITE,
+        //     Color::WHITE,
+        //     app,
+        //     ButtonAction::ResetConfig,
+        //     ViewEnum::DefaultView,
+        // );
 
-        app.buttons.borrow_mut().push(reset_config_button);
+        // app.buttons.borrow_mut().push(reset_config_button);
 
-        let back_button = TextButton::new(
-            "Back",
-            Vector2f::new(app.win_size.x / 2.0, app.win_size.y - 100.0),
-            Color::WHITE,
-            Color::WHITE,
-            app,
-            ButtonAction::GotoMenu,
-            ViewEnum::DefaultView,
-        );
-        app.buttons.borrow_mut().push(back_button);
+        // let back_button = TextButton::new(
+        //     "Back",
+        //     Vector2f::new(app.win_size.x / 2.0, app.win_size.y - 100.0),
+        //     Color::WHITE,
+        //     Color::WHITE,
+        //     app,
+        //     ButtonAction::GotoMenu,
+        //     ViewEnum::DefaultView,
+        // );
+        // app.buttons.borrow_mut().push(back_button);
     }
 }
