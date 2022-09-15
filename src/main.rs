@@ -1,28 +1,29 @@
 use app::App;
 use audio::SoundBuffers;
-use game_state::{GameState::{self, Menu, Play, Options}};
+use game_state::GameState::{self, Menu, Options, Play};
 use sfml::graphics::{Color, RenderTarget};
 use window::ui;
 
-mod kanji;
-mod window;
-mod game_state;
+mod app;
 mod audio;
 mod config;
-mod app;
+mod game_state;
+mod kanji;
+mod window;
+mod kanji_dealer;
 
 fn main() {
     let sounds = SoundBuffers::new();
     let mut app = App::new(&sounds);
     app.change_state(GameState::Menu);
-    
+
     // Update loop
     while app.window.is_open() {
         if app.is_switching_state {
             match app.current_state {
-                Menu    => GameState::init_menu_state(&mut app),
+                Menu => GameState::init_menu_state(&mut app),
                 Options => GameState::init_options_state(&mut app),
-                Play    => GameState::init_play_state(&mut app),
+                Play => GameState::init_play_state(&mut app),
             }
             app.is_switching_state = false;
         }
@@ -36,4 +37,3 @@ fn main() {
     // Save configurations to disk
     app.config.to_file(App::CONFIG_PATH);
 }
-

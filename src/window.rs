@@ -1,6 +1,7 @@
 use sfml::{
-    graphics::{RenderWindow},
-    window::{Event, Key, Style, VideoMode}, system::Vector2i,
+    graphics::RenderWindow,
+    system::Vector2i,
+    window::{Event, Key, Style, VideoMode},
 };
 
 use crate::app::App;
@@ -20,10 +21,15 @@ pub fn handle_events(app: &mut App) {
     while let Some(event) = app.window.poll_event() {
         app.egui.add_event(&event);
         match event {
-            Event::Closed | Event::KeyPressed { code: Key::Escape, .. } => app.window.close(),
-            Event::MouseButtonPressed { button: _, x, y } => app.update_buttons(Vector2i::new(x, y), true),
+            Event::Closed
+            | Event::KeyPressed {
+                code: Key::Escape, ..
+            } => app.window.close(),
+            Event::MouseButtonPressed { button: _, x, y } => {
+                app.update_buttons(Vector2i::new(x, y), true)
+            }
             Event::MouseMoved { x, y } => app.update_buttons(Vector2i::new(x, y), false),
-            _ => {/* Do nothing */},
+            _ => { /* Do nothing */ }
         }
     }
 }
@@ -35,26 +41,32 @@ pub enum ViewEnum {
 }
 
 pub mod ui {
-    use egui_sfml::egui::{self, Context, TextStyle, FontFamily, FontId};
-    use sfml::{system::{Vector2f, Vector2i}, graphics::{
-        Color, RectangleShape, Transformable, Shape, Text, Rect, RenderTarget, RenderWindow}};
+    use egui_sfml::egui::{self, Context, FontFamily, FontId, TextStyle};
+    use sfml::{
+        graphics::{
+            Color, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text, Transformable,
+        },
+        system::{Vector2f, Vector2i},
+    };
 
-    use crate::{app::App, game_state::GameState::{self}, config::Config};
+    use crate::{
+        app::App,
+        config::Config,
+        game_state::GameState::{self},
+    };
 
     use super::ViewEnum;
 
     pub fn draw(app: &mut App) {
-        app.egui.do_frame(|ctx|{
-            match app.current_state {
-                GameState::Menu => {},
-                GameState::Play => {},
-                GameState::Options => add_options_egui(
-                    &mut app.config,
-                    &mut app.current_state,
-                    &mut app.is_switching_state,
-                    ctx
-                ),
-            }
+        app.egui.do_frame(|ctx| match app.current_state {
+            GameState::Menu => {}
+            GameState::Play => {}
+            GameState::Options => add_options_egui(
+                &mut app.config,
+                &mut app.current_state,
+                &mut app.is_switching_state,
+                ctx,
+            ),
         });
         app.egui.draw(&mut app.window, None);
     }
@@ -63,21 +75,35 @@ pub mod ui {
         let mut font_defs = egui::FontDefinitions::default();
         font_defs.font_data.insert(
             "Honoka-Shin".to_string(),
-            egui::FontData::from_static(include_bytes!("../res/font/Honoka-Shin-Antique-Maru_R.otf"))
+            egui::FontData::from_static(include_bytes!(
+                "../res/font/Honoka-Shin-Antique-Maru_R.otf"
+            )),
         );
         font_defs
             .families
             .entry(egui::FontFamily::Proportional)
             .or_default()
             .insert(0, "Honoka-Shin".to_string());
-        
+
         let mut style = (*ctx.style()).clone();
         style.text_styles = [
-            (TextStyle::Heading, FontId::new(30.0, FontFamily::Proportional)),
+            (
+                TextStyle::Heading,
+                FontId::new(30.0, FontFamily::Proportional),
+            ),
             (TextStyle::Body, FontId::new(50.0, FontFamily::Proportional)),
-            (TextStyle::Monospace, FontId::new(14.0, FontFamily::Proportional)),
-            (TextStyle::Button, FontId::new(50.0, FontFamily::Proportional)),
-            (TextStyle::Small, FontId::new(10.0, FontFamily::Proportional)),
+            (
+                TextStyle::Monospace,
+                FontId::new(14.0, FontFamily::Proportional),
+            ),
+            (
+                TextStyle::Button,
+                FontId::new(50.0, FontFamily::Proportional),
+            ),
+            (
+                TextStyle::Small,
+                FontId::new(10.0, FontFamily::Proportional),
+            ),
         ]
         .into();
         style.spacing.item_spacing = egui::vec2(20.0, 20.0);
@@ -85,7 +111,12 @@ pub mod ui {
         ctx.set_style(style);
     }
 
-    fn add_options_egui(config: &mut Config, state: &mut GameState, is_switching_state: &mut bool, ctx: &Context) {
+    fn add_options_egui(
+        config: &mut Config,
+        state: &mut GameState,
+        is_switching_state: &mut bool,
+        ctx: &Context,
+    ) {
         egui::Area::new("Configurations")
             .movable(false)
             .show(ctx, |ui| {
@@ -102,7 +133,7 @@ pub mod ui {
                         *config = Config::default();
                     }
                 });
-        });
+            });
     }
 
     #[derive(Clone, Copy)]
@@ -168,23 +199,24 @@ pub mod ui {
         color_overridden: bool,
     }
 
-    impl <'a>TextButton<'a> {
+    impl<'a> TextButton<'a> {
         pub fn new(
-            string: &str, 
-            pos: Vector2f, 
-            fg_color: Color, 
-            bg_color: Color, 
-            app: &App, 
+            string: &str,
+            pos: Vector2f,
+            fg_color: Color,
+            bg_color: Color,
+            app: &App,
             action: ButtonAction,
             view: ViewEnum,
         ) -> Self {
             let text = TextDescriptor::new(string, pos, fg_color, true);
-            let mut button_dimensions = Text::new(string, &app.font, App::FONT_SIZE).global_bounds();
-            button_dimensions.width += App::FONT_SIZE as f32 / 2.0;
-            button_dimensions.height += App::FONT_SIZE as f32 / 2.0;
+            let mut button_dimensions =
+                Text::new(string, &app.font, App::FONT_SIZE).global_bounds();
+            button_dimensions.width += App::FONT_SIZE as f32;
+            button_dimensions.height += App::FONT_SIZE as f32;
 
             let mut shape = RectangleShape::from_rect(button_dimensions);
-            shape.set_position(pos - button_dimensions.size() / 2.0 + Vector2f::new(0.0, 10.0));
+            shape.set_position(pos - button_dimensions.size() / 2.0 + Vector2f::new(3.0, 10.0));
             shape.set_outline_color(bg_color);
             shape.set_outline_thickness(2.0);
             shape.set_fill_color(Color::TRANSPARENT);
@@ -217,7 +249,7 @@ pub mod ui {
         pub fn check_for_mouse_press(&self, mouse_pos: Vector2i) -> Option<ButtonAction> {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
             if self.shape.global_bounds().contains(mouse_pos) {
-               Some(self.action)
+                Some(self.action)
             } else {
                 None
             }
@@ -242,6 +274,5 @@ pub mod ui {
             window.draw(&self.shape);
             window.draw(text);
         }
-
     }
 }

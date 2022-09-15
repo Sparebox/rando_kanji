@@ -1,6 +1,12 @@
-use std::{path::Path, fs::File, io::{BufReader, BufWriter}, error::Error, collections::HashMap};
+use std::{
+    collections::HashMap,
+    error::Error,
+    fs::File,
+    io::{BufReader, BufWriter},
+    path::Path,
+};
 
-use serde::{Serialize, Deserialize};
+use serde::{Deserialize, Serialize};
 
 #[derive(Serialize, Deserialize, Default)]
 pub struct Config {
@@ -24,7 +30,7 @@ impl Config {
             Ok(file) => {
                 let writer = BufWriter::new(file);
                 let _ = serde_json::to_writer(writer, self);
-            },
+            }
             Err(err) => eprintln!("{}", err),
         };
     }

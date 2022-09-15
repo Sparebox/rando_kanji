@@ -1,18 +1,34 @@
-use std::{cell::RefCell, rc::Rc, path::Path};
+use std::{cell::RefCell, rc::Rc};
 
 use egui_sfml::SfEgui;
-use sfml::{graphics::{RenderWindow, Font, RenderTarget, Color, Text, View}, system::{Vector2f, Vector2u, Vector2i}, SfBox};
+use sfml::{
+    graphics::{Color, Font, RenderTarget, RenderWindow, Text, View},
+    system::{Vector2f, Vector2i, Vector2u},
+    SfBox,
+};
 
-use crate::{config::Config, kanji::KanjiRecord, window::{ui::{TextDescriptor, TextButton, ButtonAction::{GotoGame, GotoOptions, GotoMenu, ExitGame}, AnswerData, self}, self, ViewEnum}, game_state::GameState, audio::{SoundPlayers, SoundBuffers}};
-use crate::window::ui::ButtonAction::CheckAnswer;
+use crate::{window::ui::ButtonAction::CheckAnswer, kanji::KanjiDealer};
+use crate::{
+    audio::{SoundBuffers, SoundPlayers},
+    config::Config,
+    game_state::GameState,
+    window::{
+        self,
+        ui::{
+            self, AnswerData,
+            ButtonAction::{ExitGame, GotoGame, GotoMenu, GotoOptions},
+            TextButton, TextDescriptor,
+        },
+        ViewEnum,
+    },
+};
 
 pub struct App<'a> {
     pub window: RenderWindow,
     pub main_view: SfBox<View>,
     pub game_view: SfBox<View>,
-    pub win_size: Vector2f,
     pub config: Config,
-    pub kanjis: Vec<KanjiRecord>,
+    pub kanji_dealer: KanjiDealer,
     pub font: SfBox<Font>,
     pub texts: Vec<TextDescriptor>,
     pub buttons: Rc<RefCell<Vec<TextButton<'a>>>>,
@@ -22,7 +38,7 @@ pub struct App<'a> {
     pub egui: SfEgui,
 }
 
-impl <'a>App<'a> {
+impl<'a> App<'a> {
     pub const FPS_LIMIT: u32 = 30;
     pub const FONT_SIZE: u32 = 50;
     pub const INIT_WIN_SIZE: Vector2u = Vector2u::new(1600, 900);
@@ -34,23 +50,21 @@ impl <'a>App<'a> {
         let mut window = window::init();
 
         let main_view = View::new(
-            Vector2f::new(App::INIT_WIN_SIZE.x as f32 / 2.0, App::INIT_WIN_SIZE.y as f32 / 2.0),
-            Vector2f::new(window.size().x as f32, window.size().y as f32)
+            Vector2f::new(
+                App::INIT_WIN_SIZE.x as f32 / 2.0,
+                App::INIT_WIN_SIZE.y as f32 / 2.0,
+            ),
+            Vector2f::new(window.size().x as f32, window.size().y as f32),
         );
         let game_view = main_view.clone();
         window.set_view(&main_view);
 
-        let win_size = window.size().as_other();
-        let config = 
-            match Config::from_file(App::CONFIG_PATH) {
-                Ok(config) => config,
-                Err(_) => Config::default(),
-            };
-
-        let kanjis = KanjiRecord::from_csv(Path::new(App::KANJI_DB_PATH))
-            .expect("Could not load kanjis");
-        let font = Font::from_file(App::FONT_PATH)
-            .expect("Could not load font");
+        let config = match Config::from_file(App::CONFIG_PATH) {
+            Ok(config) => config,
+            Err(_) => Config::default(),
+        };
+        let kanji_dealer = KanjiDealer::new();
+        let font = Font::from_file(App::FONT_PATH).expect("Could not load font");
         let texts = Vec::new();
         let buttons = Rc::new(RefCell::new(Vec::new()));
         let current_state = GameState::Menu;
@@ -58,14 +72,13 @@ impl <'a>App<'a> {
         let sounds = SoundPlayers::new(sounds);
         let egui = SfEgui::new(&window);
         ui::set_custom_egui_font(egui.context());
-        
+
         Self {
             window,
             main_view,
             game_view,
-            win_size,
             config,
-            kanjis,
+            kanji_dealer,
             font,
             texts,
             buttons,
@@ -77,16 +90,15 @@ impl <'a>App<'a> {
     }
 
     fn check_answer(&mut self, button: &mut TextButton, data: &AnswerData) {
-        if data.index_to_test == data.correct_index { // If correct reading choice
+        if data.index_to_test == data.correct_index {
+            // If correct reading choice
             self.sound_players.correct_ans.play();
-            let stat =
-                self.config.answer_statistics.entry(data.kanji).or_insert(0);
+            let stat = self.config.answer_statistics.entry(data.kanji).or_insert(0);
             *stat += 1;
             self.change_state(GameState::Play);
         } else {
             self.sound_players.incorrect_ans.play();
-            let stat = 
-                self.config.answer_statistics.entry(data.kanji).or_insert(0);
+            let stat = self.config.answer_statistics.entry(data.kanji).or_insert(0);
             *stat -= 1;
             button.set_color(Color::RED, true);
         }
@@ -101,12 +113,12 @@ impl <'a>App<'a> {
             }
             if check_press {
                 match button.check_for_mouse_press(mouse_pos) {
-                    Some(GotoGame)     => self.change_state(GameState::Play),
-                    Some(GotoOptions)  => self.change_state(GameState::Options),
-                    Some(GotoMenu)     => self.change_state(GameState::Menu),
+                    Some(GotoGame) => self.change_state(GameState::Play),
+                    Some(GotoOptions) => self.change_state(GameState::Options),
+                    Some(GotoMenu) => self.change_state(GameState::Menu),
                     Some(CheckAnswer(data)) => self.check_answer(button, &data),
                     Some(ExitGame) => self.window.close(),
-                    None => {},
+                    None => {}
                 }
             } else {
                 button.check_for_mouse_hover(mouse_pos);
@@ -142,6 +154,9 @@ impl <'a>App<'a> {
     }
 
     pub fn reset_zoom(&mut self) {
-        self.game_view.set_size(Vector2f::new(self.window.size().x as f32, self.window.size().y as f32));
+        self.game_view.set_size(Vector2f::new(
+            self.window.size().x as f32,
+            self.window.size().y as f32,
+        ));
     }
 }
