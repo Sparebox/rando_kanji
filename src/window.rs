@@ -91,7 +91,9 @@ pub mod ui {
                 TextStyle::Heading,
                 FontId::new(30.0, FontFamily::Proportional),
             ),
-            (TextStyle::Body, FontId::new(50.0, FontFamily::Proportional)),
+            (   
+                TextStyle::Body,
+                FontId::new(50.0, FontFamily::Proportional)),
             (
                 TextStyle::Monospace,
                 FontId::new(14.0, FontFamily::Proportional),

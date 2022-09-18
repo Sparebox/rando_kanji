@@ -90,6 +90,7 @@ impl GameState {
         );
         app.buttons.borrow_mut().push(back_button);
 
+        app.kanji_dealer.update_kanji_pool(&app.config);
         let correct_answer = app.kanji_dealer.deal_kanji();
 
         let mut kanji_text = TextDescriptor::new(
