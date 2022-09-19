@@ -44,7 +44,7 @@ pub mod ui {
     use egui_sfml::egui::{self, Context, FontFamily, FontId, TextStyle};
     use sfml::{
         graphics::{
-            Color, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text, Transformable,
+            Color, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text, Transformable, Font,
         },
         system::{Vector2f, Vector2i},
     };
@@ -207,13 +207,13 @@ pub mod ui {
             pos: Vector2f,
             fg_color: Color,
             bg_color: Color,
-            app: &App,
+            font: &Font,
             action: ButtonAction,
             view: ViewEnum,
         ) -> Self {
             let text = TextDescriptor::new(string, pos, fg_color, true);
             let mut button_dimensions =
-                Text::new(string, &app.font, App::FONT_SIZE).global_bounds();
+                Text::new(string, font, App::FONT_SIZE).global_bounds();
             button_dimensions.width += App::FONT_SIZE as f32;
             button_dimensions.height += App::FONT_SIZE as f32;
 

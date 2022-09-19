@@ -41,7 +41,7 @@ impl PartialEq for KanjiRecord {
 pub struct KanjiDealer {
     pub kanjis: Vec<KanjiRecord>,
     pub kanji_pool: Vec<char>, // Vector of kanji chars
-    pub last_dealt_kanji_id: u32,
+    last_dealt_kanji: char,
 }
 
 impl KanjiDealer {
@@ -51,7 +51,7 @@ impl KanjiDealer {
         Self {
             kanjis,
             kanji_pool: Vec::<char>::new(),
-            last_dealt_kanji_id: 0,
+            last_dealt_kanji: '-',
         }
     }
     /// Add kanji to the pool for spaced learning
@@ -61,6 +61,7 @@ impl KanjiDealer {
         if self.kanji_pool.is_empty() {
             if config.answer_statistics.is_empty() { // If no previous data is available
                 self.add_new_kanji_to_pool(config);
+
             } else { // Load previous statistics to kanji pool
                 for entry in config.answer_statistics.iter() {
                     if self.kanji_pool.len() as u32 == config.kanji_pool_max_size {
@@ -76,21 +77,13 @@ impl KanjiDealer {
         }
     }
 
-    pub fn deal_kanji(&self) -> &KanjiRecord {
-            let pool_char = self.kanji_pool
-                .as_slice()
-                .choose(&mut rand::thread_rng())
-                .expect("Kanji pool was empty for some reason");
-            
-            self.kanjis
-                .iter()
-                .find(|record| record.kanji == *pool_char)
-                .expect("Could not find record from kanji pool")
-    }
-
-    pub fn deal_kanji_candidates<'a>(&'a self, correct_answer: &'a KanjiRecord) -> (u8, Vec<&'a KanjiRecord>) {
+    
+    pub fn deal_kanji_candidates(&mut self) -> (u8, Vec<&KanjiRecord>) {
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
+        let correct_answer = self.deal_kanji();
+        
         let mut candidates = Vec::<&KanjiRecord>::new();
+        
         if self.kanji_pool.len() > 1 {
             let char_candidates = self.kanji_pool
                 .as_slice()
@@ -100,7 +93,7 @@ impl KanjiDealer {
             char_candidates
                 .iter()
                 .for_each(|char| candidates.push(self.find_record_by_char(char)));
-
+                
             if char_candidates.len() < 4 {
                 let to_add = 4 - char_candidates.len();
                 let mut kanji_to_add = self.kanjis
@@ -109,28 +102,49 @@ impl KanjiDealer {
                     .collect::<Vec<&KanjiRecord>>();
                 candidates.append(&mut kanji_to_add);
             }
-
+            
         } else {
             candidates = self.kanjis
-                .as_slice()
-                .choose_multiple(&mut rand::thread_rng(), 4)
-                .collect::<Vec<&KanjiRecord>>();
+            .as_slice()
+            .choose_multiple(&mut rand::thread_rng(), 4)
+            .collect::<Vec<&KanjiRecord>>();
         }
         // Remove possible duplicate correct answers
         for record in candidates.as_mut_slice() {
-            while *record == correct_answer {
+            while record.kanji == correct_answer {
                 *record = self.kanjis
-                    .as_slice()
-                    .choose(&mut rand::thread_rng())
-                    .unwrap();
+                .as_slice()
+                .choose(&mut rand::thread_rng())
+                .unwrap();
             }
         }
         // Remove possible duplicate kanji reading options
         candidates.sort_unstable_by_key(|k| k.id);
         candidates.dedup_by_key(|k| k.id);
         // Add correct answer option
-        candidates[correct_index] = correct_answer;
+        candidates[correct_index] = self.find_record_by_char(&correct_answer);
         (correct_index as u8, candidates)
+    }
+    
+    fn deal_kanji(&mut self) -> char {
+        let mut pool_char;
+        loop { // Make sure the next kanji won't be the same as last
+            pool_char = *self.kanji_pool
+                .as_slice()
+                .choose(&mut rand::thread_rng())
+                .expect("Kanji pool was empty for some reason");
+            if pool_char != self.last_dealt_kanji || self.kanji_pool.len() == 1 {
+                break;
+            }
+        }
+        
+        self.last_dealt_kanji = self.kanjis
+            .iter()
+            .find(|record| record.kanji == pool_char)
+            .map(|record| record.kanji)
+            .expect("Could not find record from kanji pool");
+
+        self.last_dealt_kanji
     }
 
     fn minimize_kanji_pool(&mut self, config: &Config) {
@@ -146,7 +160,7 @@ impl KanjiDealer {
             self.add_new_kanji_to_pool(config);
         }
     }
-
+    
     fn add_new_kanji_to_pool(&mut self, config: &Config) {
         self.kanjis.shuffle(&mut rand::thread_rng());
         for record in self.kanjis.as_slice() {
@@ -163,5 +177,4 @@ impl KanjiDealer {
             .find(|record| record.kanji == *char)
             .expect("Could not find record by char")
     }
-
 }

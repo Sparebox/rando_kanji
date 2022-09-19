@@ -41,7 +41,7 @@ impl GameState {
             Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
             Color::WHITE,
             Color::WHITE,
-            app,
+            &app.font,
             ButtonAction::GotoGame,
             ViewEnum::DefaultView,
         );
@@ -54,7 +54,7 @@ impl GameState {
             Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
             Color::WHITE,
             Color::WHITE,
-            app,
+            &app.font,
             ButtonAction::GotoOptions,
             ViewEnum::DefaultView,
         );
@@ -67,7 +67,7 @@ impl GameState {
             Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
             Color::WHITE,
             Color::WHITE,
-            app,
+            &app.font,
             ButtonAction::ExitGame,
             ViewEnum::DefaultView,
         );
@@ -75,7 +75,6 @@ impl GameState {
     }
 
     pub fn init_play_state(app: &mut App) {
-        // let height_offset: f32 = app.font_height as f32 * (5.0 / 3.0);
         app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
@@ -84,17 +83,18 @@ impl GameState {
             Vector2f::new(app.window.size().x as f32 / 2.0, app.window.size().y as f32 - 100.0),
             Color::WHITE,
             Color::WHITE,
-            app,
+            &app.font,
             ButtonAction::GotoMenu,
             ViewEnum::DefaultView,
         );
         app.buttons.borrow_mut().push(back_button);
 
         app.kanji_dealer.update_kanji_pool(&app.config);
-        let correct_answer = app.kanji_dealer.deal_kanji();
+
+        let (correct_index, candidates) = app.kanji_dealer.deal_kanji_candidates();
 
         let mut kanji_text = TextDescriptor::new(
-            &correct_answer.kanji.to_string(),
+            &candidates[correct_index as usize].kanji.to_string(),
             Vector2f::new(app.window.size().x as f32 / 2.0, 50.0),
             Color::WHITE,
             true,
@@ -104,13 +104,12 @@ impl GameState {
 
         let mut last_btn_height = 0.0;
         
-        let (correct_index, candidates) = app.kanji_dealer.deal_kanji_candidates(correct_answer);
-        for (i, option) in candidates.into_iter().enumerate() {
+        for (i, option) in candidates.iter().enumerate() {
             let button_string: String = if i as u8 == correct_index {
                 if app.config.romaji_enabled {
-                    correct_answer.as_romaji()
+                    candidates[correct_index as usize].as_romaji()
                 } else {
-                    correct_answer.joyo_reading.clone()
+                    candidates[correct_index as usize].joyo_reading.clone()
                 }
             } else if app.config.romaji_enabled {
                 option.as_romaji()
@@ -124,12 +123,12 @@ impl GameState {
                 pos,
                 Color::WHITE,
                 Color::WHITE,
-                app,
+                &app.font,
                 ButtonAction::CheckAnswer(AnswerData {
                     correct_index: correct_index as u8,
                     index_to_test: i as u8,
                     button_id: TextButton::generate_id_from_pos(pos),
-                    kanji: correct_answer.kanji,
+                    kanji: candidates[correct_index as usize].kanji,
                 }),
                 ViewEnum::GameButtonsView,
             );
