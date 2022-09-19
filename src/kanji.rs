@@ -41,6 +41,7 @@ impl PartialEq for KanjiRecord {
 pub struct KanjiDealer {
     pub kanjis: Vec<KanjiRecord>,
     pub kanji_pool: Vec<char>, // Vector of kanji chars
+    pub last_dealt_kanji_id: u32,
 }
 
 impl KanjiDealer {
@@ -50,6 +51,7 @@ impl KanjiDealer {
         Self {
             kanjis,
             kanji_pool: Vec::<char>::new(),
+            last_dealt_kanji_id: 0,
         }
     }
     /// Add kanji to the pool for spaced learning
@@ -79,17 +81,41 @@ impl KanjiDealer {
                 .as_slice()
                 .choose(&mut rand::thread_rng())
                 .expect("Kanji pool was empty for some reason");
-                
-            self.kanjis.iter().find(|record| record.kanji == *pool_char).unwrap()
+            
+            self.kanjis
+                .iter()
+                .find(|record| record.kanji == *pool_char)
+                .expect("Could not find record from kanji pool")
     }
 
     pub fn deal_kanji_candidates<'a>(&'a self, correct_answer: &'a KanjiRecord) -> (u8, Vec<&'a KanjiRecord>) {
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
-        let mut candidates = self.kanjis
-            .as_slice()
-            .choose_multiple(&mut rand::thread_rng(), 4)
-            .collect::<Vec<&KanjiRecord>>();
-        
+        let mut candidates = Vec::<&KanjiRecord>::new();
+        if self.kanji_pool.len() > 1 {
+            let char_candidates = self.kanji_pool
+                .as_slice()
+                .choose_multiple(&mut rand::thread_rng(), 4)
+                .collect::<Vec<&char>>();
+
+            char_candidates
+                .iter()
+                .for_each(|char| candidates.push(self.find_record_by_char(char)));
+
+            if char_candidates.len() < 4 {
+                let to_add = 4 - char_candidates.len();
+                let mut kanji_to_add = self.kanjis
+                    .as_slice()
+                    .choose_multiple(&mut rand::thread_rng(), to_add)
+                    .collect::<Vec<&KanjiRecord>>();
+                candidates.append(&mut kanji_to_add);
+            }
+
+        } else {
+            candidates = self.kanjis
+                .as_slice()
+                .choose_multiple(&mut rand::thread_rng(), 4)
+                .collect::<Vec<&KanjiRecord>>();
+        }
         // Remove possible duplicate correct answers
         for record in candidates.as_mut_slice() {
             while *record == correct_answer {
@@ -131,4 +157,11 @@ impl KanjiDealer {
             }
         }
     }
+
+    fn find_record_by_char(&self, char: &char) -> &KanjiRecord {
+        self.kanjis.iter()
+            .find(|record| record.kanji == *char)
+            .expect("Could not find record by char")
+    }
+
 }
