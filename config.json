@@ -1,1 +1,179 @@
-{"romaji_enabled":true,"learned_threshold":5,"kanji_pool_max_size":10,"answer_statistics":{"慎":5,"務":5,"察":5,"貨":5,"芋":5,"菌":5,"偵":5,"潟":5,"芯":5,"氏":5,"御":5,"朱":5,"峡":5,"自":5,"姉":5,"儒":5}}
+{
+  "romaji_enabled": true,
+  "learning_index_threshold": 5,
+  "base_review_interval": {
+    "secs": 300,
+    "nanos": 0
+  },
+  "kanji_pool_max_size": 10,
+  "answer_statistics": {
+    "旧": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677446,
+        "nanos_since_epoch": 913962100
+      }
+    },
+    "験": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677639,
+        "nanos_since_epoch": 511227100
+      }
+    },
+    "弧": {
+      "learning_index": 2,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677401,
+        "nanos_since_epoch": 532702600
+      }
+    },
+    "豚": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677625,
+        "nanos_since_epoch": 741874900
+      }
+    },
+    "描": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677441,
+        "nanos_since_epoch": 575906900
+      }
+    },
+    "供": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677484,
+        "nanos_since_epoch": 112516700
+      }
+    },
+    "殻": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677592,
+        "nanos_since_epoch": 491350600
+      }
+    },
+    "打": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677704,
+        "nanos_since_epoch": 45904500
+      }
+    },
+    "音": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677672,
+        "nanos_since_epoch": 522317500
+      }
+    },
+    "賊": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677610,
+        "nanos_since_epoch": 560087500
+      }
+    },
+    "今": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677535,
+        "nanos_since_epoch": 23089800
+      }
+    },
+    "罵": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677480,
+        "nanos_since_epoch": 819373800
+      }
+    },
+    "左": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677603,
+        "nanos_since_epoch": 586942100
+      }
+    },
+    "可": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677670,
+        "nanos_since_epoch": 906566000
+      }
+    },
+    "璽": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677461,
+        "nanos_since_epoch": 732694500
+      }
+    },
+    "鬱": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677695,
+        "nanos_since_epoch": 372697600
+      }
+    },
+    "寛": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677666,
+        "nanos_since_epoch": 136904200
+      }
+    },
+    "握": {
+      "learning_index": 2,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663676871,
+        "nanos_since_epoch": 948089200
+      }
+    },
+    "山": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677437,
+        "nanos_since_epoch": 264952000
+      }
+    },
+    "魂": {
+      "learning_index": 2,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663676987,
+        "nanos_since_epoch": 855974800
+      }
+    },
+    "健": {
+      "learning_index": 2,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677103,
+        "nanos_since_epoch": 261324300
+      }
+    },
+    "塁": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677531,
+        "nanos_since_epoch": 636003400
+      }
+    },
+    "比": {
+      "learning_index": 2,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677707,
+        "nanos_since_epoch": 207218600
+      }
+    },
+    "彼": {
+      "learning_index": 5,
+      "time_since_last_review": {
+        "secs_since_epoch": 1663677464,
+        "nanos_since_epoch": 591198200
+      }
+    }
+  }
+}

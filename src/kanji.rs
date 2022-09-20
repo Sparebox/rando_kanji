@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{path::Path, time::{Duration, SystemTimeError, SystemTime}};
 
 use rand::{seq::SliceRandom, Rng};
 use serde::Deserialize;
@@ -30,6 +30,21 @@ impl KanjiRecord {
     pub fn as_romaji(&self) -> String {
         self.on_reading.clone() + " " + self.kun_reading.as_str()
     }
+
+    pub fn time_since_last_review(&self, config: &Config) -> Result<Duration, SystemTimeError> {
+        config.answer_statistics.iter()
+            .find(|entry| *entry.0 == self.kanji)
+            .unwrap().1.time_since_last_review.elapsed()
+    }
+
+    pub fn update_review_date(&self, config: &mut Config) {
+        if !config.answer_statistics.contains_key(&self.kanji) {
+            return;
+        }
+        config.answer_statistics.iter_mut()
+            .find(|entry| *entry.0 == self.kanji)
+            .unwrap().1.time_since_last_review = SystemTime::now();
+    }
 }
 
 impl PartialEq for KanjiRecord {
@@ -57,12 +72,12 @@ impl KanjiDealer {
     /// Add kanji to the pool for spaced learning
     /// based on the learning threshold set in Config.
     /// i.e ignore the kanji that have been guessed right enough times
-    pub fn update_kanji_pool(&mut self, config: &Config) {
+    pub fn update_kanji_pool(&mut self, config: &mut Config) {
         if self.kanji_pool.is_empty() {
             if config.answer_statistics.is_empty() { // If no previous data is available
                 self.add_new_kanji_to_pool(config);
 
-            } else { // Load previous statistics to kanji pool
+            } else { // Load from previous statistics to kanji pool
                 for entry in config.answer_statistics.iter() {
                     if self.kanji_pool.len() as u32 == config.kanji_pool_max_size {
                         break;
@@ -78,9 +93,10 @@ impl KanjiDealer {
     }
 
     
-    pub fn deal_kanji_candidates(&mut self) -> (u8, Vec<&KanjiRecord>) {
+    pub fn deal_kanji_candidates(&mut self, config: &mut Config) -> (u8, Vec<&KanjiRecord>) {
         let correct_index: usize = rand::thread_rng().gen_range(0..=3);
         let correct_answer = self.deal_kanji();
+        self.find_record_by_char(&correct_answer).update_review_date(config);
         
         let mut candidates = Vec::<&KanjiRecord>::new();
         
@@ -147,9 +163,9 @@ impl KanjiDealer {
         self.last_dealt_kanji
     }
 
-    fn minimize_kanji_pool(&mut self, config: &Config) {
+    fn minimize_kanji_pool(&mut self, config: &mut Config) {
         for entry in config.answer_statistics.iter() {
-            if *entry.1 >= config.learned_threshold {
+            if entry.1.learning_index >= config.learning_index_threshold {
                 self.kanji_pool.retain(|kanji| *kanji != *entry.0);
                 if self.kanji_pool.is_empty() {
                     break;
@@ -161,7 +177,10 @@ impl KanjiDealer {
         }
     }
     
-    fn add_new_kanji_to_pool(&mut self, config: &Config) {
+    fn add_new_kanji_to_pool(&mut self, config: &mut Config) {
+        if self.add_kanji_to_pool_based_on_review_intervals(config) { // Check if pool was filled to max size 
+            return;
+        }
         self.kanjis.shuffle(&mut rand::thread_rng());
         for record in self.kanjis.as_slice() {
             if self.kanji_pool.len() as u32 == config.kanji_pool_max_size {
@@ -176,5 +195,19 @@ impl KanjiDealer {
         self.kanjis.iter()
             .find(|record| record.kanji == *char)
             .expect("Could not find record by char")
+    }
+
+    /// Returns true if kanji pool was filled to max size
+    fn add_kanji_to_pool_based_on_review_intervals(&mut self, config: &mut Config) -> bool {
+        for (char, stat) in config.answer_statistics.iter_mut() {
+            if self.kanji_pool.len() as u32 == config.kanji_pool_max_size {
+                return true;
+            }
+            if stat.time_since_last_review.elapsed().unwrap_or_default() > config.base_review_interval {
+                stat.learning_index /= 2;
+                self.kanji_pool.push(*char);
+            }
+        }
+        self.kanji_pool.len() as u32 == config.kanji_pool_max_size
     }
 }

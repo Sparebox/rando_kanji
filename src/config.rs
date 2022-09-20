@@ -3,7 +3,7 @@ use std::{
     error::Error,
     fs::File,
     io::{BufReader, BufWriter},
-    path::Path,
+    path::Path, time::{SystemTime, Duration},
 };
 
 use serde::{Deserialize, Serialize};
@@ -11,9 +11,10 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub romaji_enabled: bool,
-    pub learned_threshold: i32, // Amount of correct answers for a kanji to be considered learned
+    pub learning_index_threshold: i32, // Value of learning index for a kanji to be considered learned
+    pub base_review_interval: Duration, // The time between the reviews of a specific kanji
     pub kanji_pool_max_size: u32, // Size of the kanji pool at the start of a new pool cycle
-    pub answer_statistics: HashMap<char, i32>,
+    pub answer_statistics: HashMap<char, StatValue>,
 }
 
 impl Config {
@@ -30,10 +31,18 @@ impl Config {
         match File::create(path) {
             Ok(file) => {
                 let writer = BufWriter::new(file);
-                let _ = serde_json::to_writer(writer, self);
+                serde_json::to_writer_pretty(writer, self).expect("Could not save config to disk!");
             }
             Err(err) => eprintln!("{}", err),
         };
+    }
+
+    fn days_to_seconds(days: u64) -> u64 {
+        days * 24 * 60 * 60
+    }
+
+    fn minutes_to_seconds(minutes: u64) -> u64 {
+        minutes * 60
     }
 }
 
@@ -41,9 +50,25 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             romaji_enabled: false,
-            learned_threshold: 5,
+            learning_index_threshold: 5,
+            base_review_interval: Duration::from_secs(Self::minutes_to_seconds(5)),
             kanji_pool_max_size: 10,
             answer_statistics: HashMap::default(),
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+pub struct StatValue {
+    pub learning_index: i32,
+    pub time_since_last_review: SystemTime,
+}
+
+impl Default for StatValue {
+    fn default() -> Self {
+        StatValue {
+            learning_index: 0,
+            time_since_last_review: SystemTime::now(),
         }
     }
 }

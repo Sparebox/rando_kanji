@@ -7,7 +7,7 @@ use sfml::{
     SfBox,
 };
 
-use crate::{window::ui::ButtonAction::CheckAnswer, kanji::KanjiDealer};
+use crate::{window::ui::ButtonAction::CheckAnswer, kanji::KanjiDealer, config::StatValue};
 use crate::{
     audio::{SoundBuffers, SoundPlayers},
     config::Config,
@@ -93,13 +93,13 @@ impl<'a> App<'a> {
         if data.index_to_test == data.correct_index {
             // If correct reading choice
             self.sound_players.correct_ans.play();
-            let stat = self.config.answer_statistics.entry(data.kanji).or_insert(0);
-            *stat += 1;
-            self.change_state(GameState::Play);
-        } else {
+            let entry = self.config.answer_statistics.entry(data.kanji).or_insert_with(StatValue::default);
+            entry.learning_index += 1;
+            self.change_state(GameState::Play); // Show a new kanji
+        } else { // Incorrect reading choice
             self.sound_players.incorrect_ans.play();
-            let stat = self.config.answer_statistics.entry(data.kanji).or_insert(0);
-            *stat -= 1;
+            let entry = self.config.answer_statistics.entry(data.kanji).or_insert_with(StatValue::default);
+            entry.learning_index -= 1;
             button.set_color(Color::RED, true);
         }
     }
@@ -108,6 +108,7 @@ impl<'a> App<'a> {
         let mouse_pos = self.window.map_pixel_to_coords_current_view(mouse_pos);
         let mouse_pos = Vector2i::new(mouse_pos.x as i32, mouse_pos.y as i32);
         for button in self.buttons.clone().borrow_mut().iter_mut() {
+            // Check if a button overlaps the window
             if button.get_width() > self.game_view.size().x {
                 self.set_view_zoom(1.1);
             }

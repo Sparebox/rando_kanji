@@ -78,8 +78,9 @@ impl GameState {
         app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
+        // Menu button
         let back_button = TextButton::new(
-            "Back",
+            "Menu",
             Vector2f::new(app.window.size().x as f32 / 2.0, app.window.size().y as f32 - 100.0),
             Color::WHITE,
             Color::WHITE,
@@ -89,9 +90,10 @@ impl GameState {
         );
         app.buttons.borrow_mut().push(back_button);
 
-        app.kanji_dealer.update_kanji_pool(&app.config);
+        // Kanji
+        app.kanji_dealer.update_kanji_pool(&mut app.config);
 
-        let (correct_index, candidates) = app.kanji_dealer.deal_kanji_candidates();
+        let (correct_index, candidates) = app.kanji_dealer.deal_kanji_candidates(&mut app.config);
 
         let mut kanji_text = TextDescriptor::new(
             &candidates[correct_index as usize].kanji.to_string(),
