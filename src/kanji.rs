@@ -28,13 +28,13 @@ impl KanjiRecord {
     }
 
     pub fn as_romaji(&self) -> String {
-        self.on_reading.clone() + " " + self.kun_reading.as_str()
+        self.on_reading.clone().trim().to_string() + " " + self.kun_reading.trim()
     }
 
     pub fn time_since_last_review(&self, config: &Config) -> Result<Duration, SystemTimeError> {
         config.answer_statistics.iter()
             .find(|entry| *entry.0 == self.kanji)
-            .unwrap().1.time_since_last_review.elapsed()
+            .unwrap().1.last_review_time.elapsed()
     }
 
     pub fn update_review_date(&self, config: &mut Config) {
@@ -43,7 +43,7 @@ impl KanjiRecord {
         }
         config.answer_statistics.iter_mut()
             .find(|entry| *entry.0 == self.kanji)
-            .unwrap().1.time_since_last_review = SystemTime::now();
+            .unwrap().1.last_review_time = SystemTime::now();
     }
 }
 
@@ -164,7 +164,7 @@ impl KanjiDealer {
     }
 
     fn minimize_kanji_pool(&mut self, config: &mut Config) {
-        for entry in config.answer_statistics.iter() {
+        for entry in config.answer_statistics.iter_mut() {
             if entry.1.learning_index >= config.learning_index_threshold {
                 self.kanji_pool.retain(|kanji| *kanji != *entry.0);
                 if self.kanji_pool.is_empty() {
@@ -200,14 +200,14 @@ impl KanjiDealer {
     /// Returns true if kanji pool was filled to max size
     fn add_kanji_to_pool_based_on_review_intervals(&mut self, config: &mut Config) -> bool {
         for (char, stat) in config.answer_statistics.iter_mut() {
-            if self.kanji_pool.len() as u32 == config.kanji_pool_max_size {
+            if self.kanji_pool.len() as u32 >= config.kanji_pool_max_size {
                 return true;
             }
-            if stat.time_since_last_review.elapsed().unwrap_or_default() > config.base_review_interval {
+            if stat.last_review_time.elapsed().unwrap_or_default() > stat.review_interval {
                 stat.learning_index /= 2;
                 self.kanji_pool.push(*char);
             }
         }
-        self.kanji_pool.len() as u32 == config.kanji_pool_max_size
+        self.kanji_pool.len() as u32 >= config.kanji_pool_max_size
     }
 }

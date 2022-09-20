@@ -111,12 +111,12 @@ impl GameState {
                 if app.config.romaji_enabled {
                     candidates[correct_index as usize].as_romaji()
                 } else {
-                    candidates[correct_index as usize].joyo_reading.clone()
+                    candidates[correct_index as usize].joyo_reading.clone().trim().to_string()
                 }
             } else if app.config.romaji_enabled {
                 option.as_romaji()
             } else {
-                option.joyo_reading.clone()
+                option.joyo_reading.clone().trim().to_string()
             };
 
             let pos = Vector2f::new(app.window.size().x as f32 / 2.0, 200.0 + last_btn_height);

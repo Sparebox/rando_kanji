@@ -12,12 +12,12 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     pub romaji_enabled: bool,
     pub learning_index_threshold: i32, // Value of learning index for a kanji to be considered learned
-    pub base_review_interval: Duration, // The time between the reviews of a specific kanji
     pub kanji_pool_max_size: u32, // Size of the kanji pool at the start of a new pool cycle
     pub answer_statistics: HashMap<char, StatValue>,
 }
 
 impl Config {
+    pub const REVIEW_INTERVAL_STEP: Duration = Duration::from_secs(Self::minutes_to_seconds(5)); // Time step to increase time between review intervals
     pub fn from_file(path: &str) -> Result<Config, Box<dyn Error>> {
         let path = Path::new(path);
         let file = File::open(path)?;
@@ -37,11 +37,17 @@ impl Config {
         };
     }
 
-    fn days_to_seconds(days: u64) -> u64 {
+    pub fn reset_review_times(&mut self) {
+        self.answer_statistics
+            .iter_mut()
+            .for_each(|stat| stat.1.last_review_time = SystemTime::now())
+    }
+
+    const fn days_to_seconds(days: u64) -> u64 {
         days * 24 * 60 * 60
     }
 
-    fn minutes_to_seconds(minutes: u64) -> u64 {
+    const fn minutes_to_seconds(minutes: u64) -> u64 {
         minutes * 60
     }
 }
@@ -51,7 +57,6 @@ impl Default for Config {
         Config {
             romaji_enabled: false,
             learning_index_threshold: 5,
-            base_review_interval: Duration::from_secs(Self::minutes_to_seconds(5)),
             kanji_pool_max_size: 10,
             answer_statistics: HashMap::default(),
         }
@@ -61,14 +66,16 @@ impl Default for Config {
 #[derive(Serialize, Deserialize)]
 pub struct StatValue {
     pub learning_index: i32,
-    pub time_since_last_review: SystemTime,
+    pub last_review_time: SystemTime,
+    pub review_interval: Duration,
 }
 
 impl Default for StatValue {
     fn default() -> Self {
         StatValue {
             learning_index: 0,
-            time_since_last_review: SystemTime::now(),
+            last_review_time: SystemTime::now(),
+            review_interval: Config::REVIEW_INTERVAL_STEP,
         }
     }
 }

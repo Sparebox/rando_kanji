@@ -60,7 +60,10 @@ impl<'a> App<'a> {
         window.set_view(&main_view);
 
         let config = match Config::from_file(App::CONFIG_PATH) {
-            Ok(config) => config,
+            Ok(mut config) => {
+                config.reset_review_times();
+                config
+            },
             Err(_) => Config::default(),
         };
         let kanji_dealer = KanjiDealer::new();
@@ -89,16 +92,20 @@ impl<'a> App<'a> {
         }
     }
 
-    fn check_answer(&mut self, button: &mut TextButton, data: &AnswerData) {
-        if data.index_to_test == data.correct_index {
-            // If correct reading choice
+    fn check_answer(&mut self, button: &mut TextButton, ans_data: &AnswerData) {
+        if ans_data.index_to_test == ans_data.correct_index { // If correct reading choice
             self.sound_players.correct_ans.play();
-            let entry = self.config.answer_statistics.entry(data.kanji).or_insert_with(StatValue::default);
+            let entry = self.config.answer_statistics.entry(ans_data.kanji).or_insert_with(StatValue::default);
             entry.learning_index += 1;
+            if entry.learning_index >= self.config.learning_index_threshold {
+                entry.review_interval += Config::REVIEW_INTERVAL_STEP;
+                dbg!("Increased review interval!");
+            }
             self.change_state(GameState::Play); // Show a new kanji
+
         } else { // Incorrect reading choice
             self.sound_players.incorrect_ans.play();
-            let entry = self.config.answer_statistics.entry(data.kanji).or_insert_with(StatValue::default);
+            let entry = self.config.answer_statistics.entry(ans_data.kanji).or_insert_with(StatValue::default);
             entry.learning_index -= 1;
             button.set_color(Color::RED, true);
         }
@@ -108,7 +115,7 @@ impl<'a> App<'a> {
         let mouse_pos = self.window.map_pixel_to_coords_current_view(mouse_pos);
         let mouse_pos = Vector2i::new(mouse_pos.x as i32, mouse_pos.y as i32);
         for button in self.buttons.clone().borrow_mut().iter_mut() {
-            // Check if a button overlaps the window
+            // Check if a button overlaps the window and zoom out accordingly
             if button.get_width() > self.game_view.size().x {
                 self.set_view_zoom(1.1);
             }
