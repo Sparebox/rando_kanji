@@ -16,7 +16,6 @@ use crate::{
         self,
         ui::{
             self, AnswerData,
-            ButtonAction::{ExitGame, GotoGame, GotoMenu, GotoOptions},
             TextButton, TextDescriptor,
         },
         ViewEnum,
@@ -113,11 +112,7 @@ impl<'a> App<'a> {
     }
 
     pub fn update_buttons(&mut self, mouse_pos: Vector2i, check_press: bool) {
-        let mapped_mouse_pos = if mouse_pos.y > (GameState::MENU_BTN_POS.y - 100.0) as i32 {
-            utils::vector2f_to_vector2i(self.window.map_pixel_to_coords(mouse_pos, &self.main_view))
-        } else {
-            utils::vector2f_to_vector2i(self.window.map_pixel_to_coords(mouse_pos, &self.game_view))
-        };
+        let mapped_mouse_pos = utils::vector2f_to_vector2i(self.window.map_pixel_to_coords(mouse_pos, &self.game_view));
 
         for button in self.buttons.clone().borrow_mut().iter_mut() {
             // Check if a button overlaps the window and zoom out accordingly
@@ -126,11 +121,7 @@ impl<'a> App<'a> {
             }
             if check_press {
                 match button.check_for_mouse_press(mapped_mouse_pos) {
-                    Some(GotoGame) => self.change_state(GameState::Play),
-                    Some(GotoOptions) => self.change_state(GameState::Options),
-                    Some(GotoMenu) => self.change_state(GameState::Menu),
                     Some(CheckAnswer(data)) => self.check_answer(button, &data),
-                    Some(ExitGame) => self.window.close(),
                     None => {}
                 }
             } else {

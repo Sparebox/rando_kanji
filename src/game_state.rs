@@ -26,73 +26,22 @@ impl GameState {
         app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
-        let mut height_offset: f32 = App::FONT_SIZE as f32 * (5.0 / 3.0);
+        
         let mut title = TextDescriptor::new(
             "Rando Kanji ・ ランド漢字",
-            Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
+            Vector2f::new(app.window.size().x as f32 / 2.0, 100.0),
             Color::WHITE,
             true,
         );
         title.font_base_size = 10;
         app.texts.push(title);
-
-        height_offset += 200.0;
-
-        let mut button = TextButton::new(
-            "Play",
-            Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
-            Color::WHITE,
-            Color::WHITE,
-            &app.font,
-            ButtonAction::GotoGame,
-            ViewEnum::DefaultView,
-        );
-        app.buttons.borrow_mut().push(button.clone());
-
-        height_offset += 200.0;
-
-        button = TextButton::new(
-            "Options",
-            Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
-            Color::WHITE,
-            Color::WHITE,
-            &app.font,
-            ButtonAction::GotoOptions,
-            ViewEnum::DefaultView,
-        );
-        app.buttons.borrow_mut().push(button.clone());
-
-        height_offset += 200.0;
-
-        button = TextButton::new(
-            "Exit",
-            Vector2f::new(app.window.size().x as f32 / 2.0, height_offset),
-            Color::WHITE,
-            Color::WHITE,
-            &app.font,
-            ButtonAction::ExitGame,
-            ViewEnum::DefaultView,
-        );
-        app.buttons.borrow_mut().push(button);
     }
 
     pub fn init_play_state(app: &mut App) {
         app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
-        // Menu button
-        let back_button = TextButton::new(
-            "Menu",
-            Self::MENU_BTN_POS,
-            Color::WHITE,
-            Color::WHITE,
-            &app.font,
-            ButtonAction::GotoMenu,
-            ViewEnum::DefaultView,
-        );
-        app.buttons.borrow_mut().push(back_button);
-
-        // Kanji
+    
         app.kanji_dealer.update_kanji_pool(&mut app.config);
 
         let (correct_index, candidates) = app.kanji_dealer.deal_kanji_candidates(&mut app.config);

@@ -44,9 +44,9 @@ impl Config {
             .for_each(|stat| stat.1.last_review_time = SystemTime::now())
     }
 
-    const fn days_to_seconds(days: u64) -> u64 {
-        days * 24 * 60 * 60
-    }
+    // const fn days_to_seconds(days: u64) -> u64 {
+    //     days * 24 * 60 * 60
+    // }
 
     const fn minutes_to_seconds(minutes: u64) -> u64 {
         minutes * 60

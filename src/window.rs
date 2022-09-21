@@ -44,7 +44,7 @@ pub mod ui {
     use egui_sfml::egui::{self, Context, FontFamily, FontId, TextStyle};
     use sfml::{
         graphics::{
-            Color, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text, Transformable, Font,
+            Color, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text, Transformable, Font, View,
         },
         system::{Vector2f, Vector2i},
     };
@@ -59,8 +59,17 @@ pub mod ui {
 
     pub fn draw(app: &mut App) {
         app.egui.do_frame(|ctx| match app.current_state {
-            GameState::Menu => {}
-            GameState::Play => {}
+            GameState::Menu => draw_menu_egui(
+                &mut app.window,
+                &mut app.current_state,
+                &mut app.is_switching_state,
+                ctx),
+            GameState::Play => draw_play_egui(
+                &mut app.current_state,
+                &mut app.is_switching_state,
+                &mut app.window,
+                &app.main_view,
+                ctx),
             GameState::Options => draw_options_egui(
                 &mut app.config,
                 &mut app.current_state,
@@ -114,6 +123,27 @@ pub mod ui {
         ctx.set_style(style);
     }
 
+    fn draw_play_egui(
+        state: &mut GameState,
+        is_switching_state: &mut bool,
+        window: &mut RenderWindow,
+        main_view: &View,
+        ctx: &Context
+    ) {
+        window.set_view(main_view);
+        egui::Area::new("ButtonArea")
+            .movable(false)
+            .anchor(egui::Align2::CENTER_BOTTOM, egui::Vec2::default())
+            .show(ctx, |ui| {
+                
+                if ui.button("Menu").clicked() {
+                    *is_switching_state = true;
+                    *state = GameState::Menu;
+                }
+                ui.add_space(20.0);
+            });
+    }
+
     fn draw_options_egui(
         config: &mut Config,
         state: &mut GameState,
@@ -123,8 +153,13 @@ pub mod ui {
     ) {
         egui::Area::new("Configurations")
             .movable(false)
+            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::default())
             .show(ctx, |ui| {
+                if *showing_dialog {
+                    ui.set_enabled(false);
+                }
                 ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                    ui.add_space(20.0);
                     if ui.checkbox(&mut config.romaji_enabled, "Toggle Rōmaji ローマ字").clicked() && config.show_meaning_enabled {
                         config.show_meaning_enabled = false;
                     }
@@ -163,6 +198,29 @@ pub mod ui {
         }
     }
 
+    fn draw_menu_egui(window: &mut RenderWindow, state: &mut GameState, is_switching_state: &mut bool, ctx: &Context) {
+        egui::Area::new("MenuArea")
+            .movable(false)
+            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::default())
+            .show(ctx, |ui| {
+                ui.vertical_centered(|ui| {
+                    if ui.button("Play").clicked() {
+                        *is_switching_state = true;
+                        *state = GameState::Play;
+                    }
+                    ui.add_space(50.0);
+                    if ui.button("Options").clicked() {
+                        *is_switching_state = true;
+                        *state = GameState::Options;
+                    }
+                    ui.add_space(50.0);
+                    if ui.button("Exit").clicked() {
+                        window.close();
+                    }
+                });
+            });
+    }
+
     #[derive(Clone, Copy)]
     pub struct AnswerData {
         pub correct_index: u8,
@@ -173,11 +231,7 @@ pub mod ui {
 
     #[derive(Clone, Copy)]
     pub enum ButtonAction {
-        GotoGame,
-        GotoOptions,
-        GotoMenu,
         CheckAnswer(AnswerData),
-        ExitGame,
     }
 
     #[derive(Clone)]
