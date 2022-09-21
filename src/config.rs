@@ -11,6 +11,7 @@ use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize)]
 pub struct Config {
     pub romaji_enabled: bool,
+    pub show_meaning_enabled: bool,
     pub learning_index_threshold: i32, // Value of learning index for a kanji to be considered learned
     pub kanji_pool_max_size: u32, // Size of the kanji pool at the start of a new pool cycle
     pub answer_statistics: HashMap<char, StatValue>,
@@ -56,6 +57,7 @@ impl Default for Config {
     fn default() -> Self {
         Config {
             romaji_enabled: false,
+            show_meaning_enabled: false,
             learning_index_threshold: 5,
             kanji_pool_max_size: 10,
             answer_statistics: HashMap::default(),

@@ -28,7 +28,11 @@ impl KanjiRecord {
     }
 
     pub fn as_romaji(&self) -> String {
-        self.on_reading.clone().trim().to_string() + " " + self.kun_reading.trim()
+        self.on_reading.trim().to_string() + " " + self.kun_reading.trim()
+    }
+
+    pub fn as_meaning(&self) -> String {
+        self.on_trans.trim().to_string() + " " + self.kun_trans.trim()
     }
 
     pub fn time_since_last_review(&self, config: &Config) -> Result<Duration, SystemTimeError> {

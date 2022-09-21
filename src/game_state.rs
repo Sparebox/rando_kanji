@@ -20,6 +20,8 @@ pub enum GameState {
 }
 
 impl GameState {
+    pub const MENU_BTN_POS: Vector2f = Vector2f::new(App::INIT_WIN_SIZE.x as f32 / 2.0, App::INIT_WIN_SIZE.y as f32 - 100.0);
+    
     pub fn init_menu_state(app: &mut App) {
         app.reset_zoom();
         app.texts.clear();
@@ -81,7 +83,7 @@ impl GameState {
         // Menu button
         let back_button = TextButton::new(
             "Menu",
-            Vector2f::new(app.window.size().x as f32 / 2.0, app.window.size().y as f32 - 100.0),
+            Self::MENU_BTN_POS,
             Color::WHITE,
             Color::WHITE,
             &app.font,
@@ -110,13 +112,17 @@ impl GameState {
             let button_string: String = if i as u8 == correct_index {
                 if app.config.romaji_enabled {
                     candidates[correct_index as usize].as_romaji()
+                } else if app.config.show_meaning_enabled {
+                    candidates[correct_index as usize].as_meaning()
                 } else {
-                    candidates[correct_index as usize].joyo_reading.clone().trim().to_string()
+                    candidates[correct_index as usize].joyo_reading.trim().to_string()
                 }
             } else if app.config.romaji_enabled {
                 option.as_romaji()
+            } else if app.config.show_meaning_enabled {
+                option.as_meaning()
             } else {
-                option.joyo_reading.clone().trim().to_string()
+                option.joyo_reading.trim().to_string()
             };
 
             let pos = Vector2f::new(app.window.size().x as f32 / 2.0, 200.0 + last_btn_height);

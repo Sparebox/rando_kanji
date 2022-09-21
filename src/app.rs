@@ -7,7 +7,7 @@ use sfml::{
     SfBox,
 };
 
-use crate::{window::ui::ButtonAction::CheckAnswer, kanji::KanjiDealer, config::StatValue};
+use crate::{window::ui::ButtonAction::CheckAnswer, kanji::KanjiDealer, config::StatValue, utils};
 use crate::{
     audio::{SoundBuffers, SoundPlayers},
     config::Config,
@@ -36,6 +36,7 @@ pub struct App<'a> {
     pub is_switching_state: bool,
     pub sound_players: SoundPlayers<'a>,
     pub egui: SfEgui,
+    pub showing_confirm_dialog: bool,
 }
 
 impl<'a> App<'a> {
@@ -89,6 +90,7 @@ impl<'a> App<'a> {
             is_switching_state,
             sound_players: sounds,
             egui,
+            showing_confirm_dialog: false,
         }
     }
 
@@ -99,7 +101,6 @@ impl<'a> App<'a> {
             entry.learning_index += 1;
             if entry.learning_index >= self.config.learning_index_threshold {
                 entry.review_interval += Config::REVIEW_INTERVAL_STEP;
-                dbg!("Increased review interval!");
             }
             self.change_state(GameState::Play); // Show a new kanji
 
@@ -112,15 +113,19 @@ impl<'a> App<'a> {
     }
 
     pub fn update_buttons(&mut self, mouse_pos: Vector2i, check_press: bool) {
-        let mouse_pos = self.window.map_pixel_to_coords_current_view(mouse_pos);
-        let mouse_pos = Vector2i::new(mouse_pos.x as i32, mouse_pos.y as i32);
+        let mapped_mouse_pos = if mouse_pos.y > (GameState::MENU_BTN_POS.y - 100.0) as i32 {
+            utils::vector2f_to_vector2i(self.window.map_pixel_to_coords(mouse_pos, &self.main_view))
+        } else {
+            utils::vector2f_to_vector2i(self.window.map_pixel_to_coords(mouse_pos, &self.game_view))
+        };
+
         for button in self.buttons.clone().borrow_mut().iter_mut() {
             // Check if a button overlaps the window and zoom out accordingly
             if button.get_width() > self.game_view.size().x {
                 self.set_view_zoom(1.1);
             }
             if check_press {
-                match button.check_for_mouse_press(mouse_pos) {
+                match button.check_for_mouse_press(mapped_mouse_pos) {
                     Some(GotoGame) => self.change_state(GameState::Play),
                     Some(GotoOptions) => self.change_state(GameState::Options),
                     Some(GotoMenu) => self.change_state(GameState::Menu),
@@ -129,7 +134,7 @@ impl<'a> App<'a> {
                     None => {}
                 }
             } else {
-                button.check_for_mouse_hover(mouse_pos);
+                button.check_for_mouse_hover(mapped_mouse_pos);
             }
         }
     }

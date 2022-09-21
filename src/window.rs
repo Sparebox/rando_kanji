@@ -61,10 +61,11 @@ pub mod ui {
         app.egui.do_frame(|ctx| match app.current_state {
             GameState::Menu => {}
             GameState::Play => {}
-            GameState::Options => add_options_egui(
+            GameState::Options => draw_options_egui(
                 &mut app.config,
                 &mut app.current_state,
                 &mut app.is_switching_state,
+                &mut app.showing_confirm_dialog,
                 ctx,
             ),
         });
@@ -113,17 +114,23 @@ pub mod ui {
         ctx.set_style(style);
     }
 
-    fn add_options_egui(
+    fn draw_options_egui(
         config: &mut Config,
         state: &mut GameState,
         is_switching_state: &mut bool,
+        showing_dialog: &mut bool,
         ctx: &Context,
     ) {
         egui::Area::new("Configurations")
             .movable(false)
             .show(ctx, |ui| {
                 ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
-                    ui.checkbox(&mut config.romaji_enabled, "Toggle Rōmaji ローマ字");
+                    if ui.checkbox(&mut config.romaji_enabled, "Toggle Rōmaji ローマ字").clicked() && config.show_meaning_enabled {
+                        config.show_meaning_enabled = false;
+                    }
+                    if ui.checkbox(&mut config.show_meaning_enabled, "Show meaning 意味付き").clicked() && config.show_meaning_enabled {
+                        config.romaji_enabled = false;
+                    }
                 });
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                     ui.add_space(20.0);
@@ -131,11 +138,29 @@ pub mod ui {
                         *state = GameState::Menu;
                         *is_switching_state = true;
                     }
+                    ui.add_space(20.0);
                     if ui.button("Reset configurations").clicked() {
-                        *config = Config::default();
+                        *showing_dialog = !*showing_dialog;
                     }
                 });
-            });
+        });
+        if *showing_dialog {
+            egui::Window::new("Reset configurations and statistics?")
+                .collapsible(false)
+                .resizable(false)
+                .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 100.0))
+                .show(ctx, |ui| {
+                    ui.horizontal_top(|ui|{
+                        if ui.button("Yes").clicked() {
+                            *config = Config::default();
+                            *showing_dialog = false;
+                        }
+                        if ui.button("Cancel").clicked() {
+                            *showing_dialog = false;
+                        }
+                    })
+                });
+        }
     }
 
     #[derive(Clone, Copy)]
@@ -250,7 +275,7 @@ pub mod ui {
 
         pub fn check_for_mouse_press(&self, mouse_pos: Vector2i) -> Option<ButtonAction> {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
-            if self.shape.global_bounds().contains(mouse_pos) {
+            if self.shape.global_bounds().contains(mouse_pos) && sfml::window::mouse::Button::Left.is_pressed() {
                 Some(self.action)
             } else {
                 None

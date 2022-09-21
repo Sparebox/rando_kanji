@@ -10,6 +10,7 @@ mod config;
 mod game_state;
 mod kanji;
 mod window;
+mod utils;
 
 fn main() {
     let sounds = SoundBuffers::new();
