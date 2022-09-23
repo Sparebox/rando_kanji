@@ -34,28 +34,21 @@ pub fn handle_events(app: &mut App) {
     }
 }
 
-#[derive(Clone, Copy)]
-pub enum ViewEnum {
-    GameButtonsView,
-    DefaultView,
-}
-
 pub mod ui {
-    use egui_sfml::egui::{self, Context, FontFamily, FontId, TextStyle};
+    use egui_sfml::egui::{self, style::Margin, Context, FontFamily, FontId, TextStyle};
     use sfml::{
         graphics::{
-            Color, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text, Transformable, Font, View,
+            Color, Font, Rect, RectangleShape, RenderTarget, RenderWindow, Shape, Text,
+            Transformable, View,
         },
         system::{Vector2f, Vector2i},
     };
 
     use crate::{
         app::App,
-        config::Config,
+        config::{ButtonTextOption, Config},
         game_state::GameState::{self},
     };
-
-    use super::ViewEnum;
 
     pub fn draw(app: &mut App) {
         app.egui.do_frame(|ctx| match app.current_state {
@@ -63,13 +56,15 @@ pub mod ui {
                 &mut app.window,
                 &mut app.current_state,
                 &mut app.is_switching_state,
-                ctx),
+                ctx,
+            ),
             GameState::Play => draw_play_egui(
                 &mut app.current_state,
                 &mut app.is_switching_state,
                 &mut app.window,
                 &app.main_view,
-                ctx),
+                ctx,
+            ),
             GameState::Options => draw_options_egui(
                 &mut app.config,
                 &mut app.current_state,
@@ -101,12 +96,10 @@ pub mod ui {
                 TextStyle::Heading,
                 FontId::new(30.0, FontFamily::Proportional),
             ),
-            (   
-                TextStyle::Body,
-                FontId::new(50.0, FontFamily::Proportional)),
+            (TextStyle::Body, FontId::new(50.0, FontFamily::Proportional)),
             (
                 TextStyle::Monospace,
-                FontId::new(14.0, FontFamily::Proportional),
+                FontId::new(30.0, FontFamily::Proportional),
             ),
             (
                 TextStyle::Button,
@@ -114,7 +107,7 @@ pub mod ui {
             ),
             (
                 TextStyle::Small,
-                FontId::new(10.0, FontFamily::Proportional),
+                FontId::new(30.0, FontFamily::Proportional),
             ),
         ]
         .into();
@@ -128,14 +121,13 @@ pub mod ui {
         is_switching_state: &mut bool,
         window: &mut RenderWindow,
         main_view: &View,
-        ctx: &Context
+        ctx: &Context,
     ) {
         window.set_view(main_view);
         egui::Area::new("ButtonArea")
             .movable(false)
             .anchor(egui::Align2::CENTER_BOTTOM, egui::Vec2::default())
             .show(ctx, |ui| {
-                
                 if ui.button("Menu").clicked() {
                     *is_switching_state = true;
                     *state = GameState::Menu;
@@ -151,22 +143,30 @@ pub mod ui {
         showing_dialog: &mut bool,
         ctx: &Context,
     ) {
-        egui::Area::new("Configurations")
-            .movable(false)
-            .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::default())
+        egui::CentralPanel::default()
+            .frame(
+                egui::Frame::none()
+                .fill(egui::Color32::from_rgb(App::BACKGROUND_COLOR.r, App::BACKGROUND_COLOR.g, App::BACKGROUND_COLOR.b))
+                .inner_margin(Margin { left: 25.0, right: 0.0 , top: 0.0, bottom: 0.0 }))
             .show(ctx, |ui| {
                 if *showing_dialog {
                     ui.set_enabled(false);
                 }
-                ui.with_layout(egui::Layout::top_down(egui::Align::Center), |ui| {
+                ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                     ui.add_space(20.0);
-                    if ui.checkbox(&mut config.romaji_enabled, "Toggle Rōmaji ローマ字").clicked() && config.show_meaning_enabled {
-                        config.show_meaning_enabled = false;
-                    }
-                    if ui.checkbox(&mut config.show_meaning_enabled, "Show meaning 意味付き").clicked() && config.show_meaning_enabled {
-                        config.romaji_enabled = false;
-                    }
+
+                    ui.radio_value(&mut config.button_text_option, ButtonTextOption::Romaji, "Show Rōmaji ローマ字");
+                    ui.radio_value(&mut config.button_text_option, ButtonTextOption::Meaning, "Show meaning 意味表示");
+                    ui.radio_value(&mut config.button_text_option, ButtonTextOption::Kana, "Show kana カナ");
+
+                    ui.add(egui::Slider::new(&mut config.kanji_pool_max_size, 4..=15).text("Kanji pool max size")).on_hover_ui(|ui| {
+                        ui.label("The maximum number of new Kanji to review at once");
+                    });
+                    ui.add(egui::Slider::new(&mut config.learning_index_threshold, 5..=15).text("Learning index threshold")).on_hover_ui(|ui| {
+                        ui.label("A higher index means that it will take more correct answers for a Kanji be considered learned");
+                    });
                 });
+
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                     ui.add_space(20.0);
                     if ui.button("Back").clicked() {
@@ -185,20 +185,29 @@ pub mod ui {
                 .resizable(false)
                 .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 100.0))
                 .show(ctx, |ui| {
-                    ui.horizontal_top(|ui|{
-                        if ui.button("Yes").clicked() {
-                            *config = Config::default();
-                            *showing_dialog = false;
-                        }
-                        if ui.button("Cancel").clicked() {
-                            *showing_dialog = false;
-                        }
-                    })
+                    egui::Grid::new("DialogGrid").show(ui, |ui| {
+                        ui.label("This will also clear saved statistics");
+                        ui.end_row();
+                        ui.horizontal_centered(|ui| {
+                            if ui.button("Yes").clicked() {
+                                *config = Config::default();
+                                *showing_dialog = false;
+                            }
+                            if ui.button("Cancel").clicked() {
+                                *showing_dialog = false;
+                            }
+                        });
+                    });
                 });
         }
     }
 
-    fn draw_menu_egui(window: &mut RenderWindow, state: &mut GameState, is_switching_state: &mut bool, ctx: &Context) {
+    fn draw_menu_egui(
+        window: &mut RenderWindow,
+        state: &mut GameState,
+        is_switching_state: &mut bool,
+        ctx: &Context,
+    ) {
         egui::Area::new("MenuArea")
             .movable(false)
             .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::default())
@@ -225,7 +234,6 @@ pub mod ui {
     pub struct AnswerData {
         pub correct_index: u8,
         pub index_to_test: u8,
-        pub button_id: u8,
         pub kanji: char,
     }
 
@@ -249,7 +257,7 @@ pub mod ui {
             Self {
                 string: string.to_string(),
                 pos,
-                bounds: Rect::new(0.0, 0.0, 0.0, 0.0),
+                bounds: Rect::default(),
                 color,
                 font_base_size: 0,
                 center,
@@ -274,9 +282,7 @@ pub mod ui {
     pub struct TextButton<'a> {
         pub text: TextDescriptor,
         pub shape: RectangleShape<'a>,
-        pub view: ViewEnum,
         pub action: ButtonAction,
-        pub id: u8,
         color_overridden: bool,
     }
 
@@ -288,11 +294,9 @@ pub mod ui {
             bg_color: Color,
             font: &Font,
             action: ButtonAction,
-            view: ViewEnum,
         ) -> Self {
             let text = TextDescriptor::new(string, pos, fg_color, true);
-            let mut button_dimensions =
-                Text::new(string, font, App::FONT_SIZE).global_bounds();
+            let mut button_dimensions = Text::new(string, font, App::FONT_SIZE).global_bounds();
             button_dimensions.width += App::FONT_SIZE as f32;
             button_dimensions.height += App::FONT_SIZE as f32;
 
@@ -305,14 +309,8 @@ pub mod ui {
                 text,
                 shape,
                 action,
-                view,
-                id: Self::generate_id_from_pos(pos),
                 color_overridden: false,
             }
-        }
-
-        pub fn generate_id_from_pos(pos: Vector2f) -> u8 {
-            (pos.x + pos.y) as u8
         }
 
         pub fn check_for_mouse_hover(&mut self, mouse_pos: Vector2i) {
@@ -329,7 +327,9 @@ pub mod ui {
 
         pub fn check_for_mouse_press(&self, mouse_pos: Vector2i) -> Option<ButtonAction> {
             let mouse_pos = Vector2f::new(mouse_pos.x as f32, mouse_pos.y as f32);
-            if self.shape.global_bounds().contains(mouse_pos) && sfml::window::mouse::Button::Left.is_pressed() {
+            if self.shape.global_bounds().contains(mouse_pos)
+                && sfml::window::mouse::Button::Left.is_pressed()
+            {
                 Some(self.action)
             } else {
                 None

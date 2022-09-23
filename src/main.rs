@@ -1,7 +1,7 @@
 use app::App;
 use audio::SoundBuffers;
 use game_state::GameState::{self, Menu, Options, Play};
-use sfml::graphics::{Color, RenderTarget};
+use sfml::graphics::RenderTarget;
 use window::ui;
 
 mod app;
@@ -9,8 +9,8 @@ mod audio;
 mod config;
 mod game_state;
 mod kanji;
-mod window;
 mod utils;
+mod window;
 
 fn main() {
     let sounds = SoundBuffers::new();
@@ -28,12 +28,12 @@ fn main() {
             app.is_switching_state = false;
         }
 
-        app.window.clear(Color::rgb(10, 10, 10));
+        app.window.clear(App::BACKGROUND_COLOR);
         window::handle_events(&mut app);
         app.draw();
         ui::draw(&mut app);
         app.window.display();
     }
     // Save configurations to disk
-    app.config.to_file(App::CONFIG_PATH);
+    app.save_config();
 }
