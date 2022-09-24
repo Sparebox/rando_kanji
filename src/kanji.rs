@@ -32,15 +32,28 @@ impl KanjiRecord {
         self.on_reading.trim().to_string() + " " + self.kun_reading.trim()
     }
 
-    pub fn as_meaning(&self) -> String {
-        self.on_trans.trim().to_string() + " " + self.kun_trans.trim()
+    pub fn as_meaning(&self) -> String { // Todo improve parsing
+        let built_string = if self.on_trans.trim() == self.kun_trans.trim() {
+            self.on_trans.trim().to_string()
+        } else {
+            self.on_trans.trim().to_string() + "," + self.kun_trans.trim()
+        };
+        let split_meanings = built_string.split(',');
+        let mut limited_string = String::new();
+        for (i, meaning) in split_meanings.into_iter().enumerate() {
+            if meaning.contains('-') {
+                continue;
+            }
+            if i as u8 == App::MEANING_WORD_LIMIT {
+                break;
+            }
+            limited_string.push_str(meaning);
+            if i as u8 != App::MEANING_WORD_LIMIT - 1 {
+                limited_string.push_str(", ");
+            } 
+        }
+        limited_string
     }
-
-    // pub fn time_since_last_review(&self, config: &Config) -> Result<Duration, SystemTimeError> {
-    //     config.answer_statistics.iter()
-    //         .find(|entry| *entry.0 == self.kanji)
-    //         .unwrap().1.last_review_time.elapsed()
-    // }
 
     pub fn update_review_date(&self, config: &mut Config) {
         if !config.answer_statistics.contains_key(&self.kanji) {
