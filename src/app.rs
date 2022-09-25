@@ -9,7 +9,7 @@ use sfml::{
 
 use crate::{
     audio::{SoundBuffers, SoundPlayers},
-    config::Config,
+    config::{Config, ProfileEnum},
     game_state::GameState,
     window::{
         self,
@@ -23,6 +23,7 @@ pub struct App<'a> {
     pub main_view: SfBox<View>,
     pub game_view: SfBox<View>,
     pub config: Config,
+    pub selected_profile: ProfileEnum,
     pub kanji_dealer: KanjiDealer,
     pub font: SfBox<Font>,
     pub texts: Vec<TextDescriptor>,
@@ -58,7 +59,8 @@ impl<'a> App<'a> {
         let game_view = main_view.clone();
         window.set_view(&main_view);
 
-        let config = Self::load_config();
+        let config = Config::load_from_file();
+        let selected_profile = config.profile.id;
         let kanji_dealer = KanjiDealer::new();
         let font = Font::from_file(App::FONT_PATH).expect("Could not load font");
         let texts = Vec::new();
@@ -74,6 +76,7 @@ impl<'a> App<'a> {
             main_view,
             game_view,
             config,
+            selected_profile,
             kanji_dealer,
             font,
             texts,
@@ -84,17 +87,6 @@ impl<'a> App<'a> {
             egui,
             showing_confirm_dialog: false,
         }
-    }
-
-    fn load_config() -> Config {
-        for i in 1..=3 {
-            if let Ok(mut config) = Config::from_file(format!("{}{}{}", App::CONFIG_PATH, i, App::CONFIG_FILE_EXTENSION).as_str()) {
-                config.reset_review_times();
-                return config;
-            }
-        }
-        eprintln!("Could not load config from file");
-        Config::default()
     }
 
     fn check_answer(&mut self, button: &mut TextButton, ans_data: &AnswerData) {
@@ -174,9 +166,5 @@ impl<'a> App<'a> {
             self.window.size().x as f32,
             self.window.size().y as f32,
         ));
-    }
-
-    pub fn save_config(&self) {
-        self.config.to_file(format!("{}{}{}", App::CONFIG_PATH, self.config.profile as u8 + 1, App::CONFIG_FILE_EXTENSION).as_str());
     }
 }

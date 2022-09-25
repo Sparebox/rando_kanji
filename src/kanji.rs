@@ -32,12 +32,17 @@ impl KanjiRecord {
         self.on_reading.trim().to_string() + " " + self.kun_reading.trim()
     }
 
-    pub fn as_meaning(&self) -> String { // Todo improve parsing
+    pub fn as_meaning(&self) -> String { // Todo: improve parsing
         let built_string = if self.on_trans.trim() == self.kun_trans.trim() {
             self.on_trans.trim().to_string()
         } else {
-            self.on_trans.trim().to_string() + "," + self.kun_trans.trim()
+            self.on_trans.trim().to_string() + "; " + self.kun_trans.trim()
         };
+
+        if !built_string.contains(',') { // If cannot be split up
+            return built_string;
+        }
+
         let split_meanings = built_string.split(',');
         let mut limited_string = String::new();
         for (i, meaning) in split_meanings.into_iter().enumerate() {
@@ -48,7 +53,7 @@ impl KanjiRecord {
                 break;
             }
             limited_string.push_str(meaning);
-            if i as u8 != App::MEANING_WORD_LIMIT - 1 {
+            if i as u8 != App::MEANING_WORD_LIMIT - 1 { // Don't add a comma at the end of the list
                 limited_string.push_str(", ");
             } 
         }

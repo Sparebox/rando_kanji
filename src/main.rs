@@ -35,5 +35,5 @@ fn main() {
         app.window.display();
     }
     // Save configurations to disk
-    app.save_config();
+    app.config.save();
 }

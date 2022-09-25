@@ -46,7 +46,7 @@ pub mod ui {
 
     use crate::{
         app::App,
-        config::{ButtonTextOption, Config},
+        config::{ButtonTextOption, Config, ProfileEnum},
         game_state::GameState::{self},
     };
 
@@ -67,6 +67,7 @@ pub mod ui {
             ),
             GameState::Options => draw_options_egui(
                 &mut app.config,
+                &mut app.selected_profile,
                 &mut app.current_state,
                 &mut app.is_switching_state,
                 &mut app.showing_confirm_dialog,
@@ -138,6 +139,7 @@ pub mod ui {
 
     fn draw_options_egui(
         config: &mut Config,
+        selected_profile: &mut ProfileEnum,
         state: &mut GameState,
         is_switching_state: &mut bool,
         showing_dialog: &mut bool,
@@ -165,7 +167,37 @@ pub mod ui {
                     ui.add(egui::Slider::new(&mut config.learning_index_threshold, 5..=15).text("Learning index threshold")).on_hover_ui(|ui| {
                         ui.label("A higher index means that it will take more correct answers for a Kanji be considered learned");
                     });
-                });
+                    
+                    ui.add_space(50.0);
+
+                    egui::ComboBox::from_label("Select profile")
+                        .width(500.0)
+                        .selected_text(selected_profile.to_string())
+                        .show_ui(ui,|ui| {
+                            let response1 = ui.selectable_value(selected_profile, ProfileEnum::Profile1, "Profile 1");
+                            let response2 = ui.selectable_value(selected_profile, ProfileEnum::Profile2, "Profile 2");
+                            let response3 = ui.selectable_value(selected_profile, ProfileEnum::Profile3, "Profile 3");
+
+                            if response1.clicked() || response2.clicked() || response3.clicked() {
+                                if let Ok(loaded_config) = Config::try_load_by_profile(*selected_profile) {
+                                    *config = loaded_config;
+                                } else {
+                                    *config = Config::default();
+                                }
+                            }
+                        })
+                    });
+                    ui.horizontal(|ui| {
+                        ui.label("Profile name: ");
+                        ui.add(egui::TextEdit::singleline(&mut config.profile.name).desired_width(500.0));
+                        ui.add_space(50.0);
+                        ui.label(format!("Reviewed Kanji: {}", config.answer_statistics.len()));
+                    });
+                    
+                    if ui.button("Save profile").clicked() {
+                        config.profile.id = *selected_profile;
+                        config.save();
+                    }
 
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                     ui.add_space(20.0);
@@ -174,23 +206,23 @@ pub mod ui {
                         *is_switching_state = true;
                     }
                     ui.add_space(20.0);
-                    if ui.button("Reset configurations").clicked() {
+                    if ui.button("Reset profile").clicked() {
                         *showing_dialog = !*showing_dialog;
                     }
                 });
         });
         if *showing_dialog {
-            egui::Window::new("Reset configurations and statistics?")
+            egui::Window::new("Reset profile and its statistics?")
                 .collapsible(false)
                 .resizable(false)
                 .anchor(egui::Align2::CENTER_CENTER, egui::Vec2::new(0.0, 100.0))
                 .show(ctx, |ui| {
                     egui::Grid::new("DialogGrid").show(ui, |ui| {
-                        ui.label("This will also clear saved statistics");
-                        ui.end_row();
                         ui.horizontal_centered(|ui| {
                             if ui.button("Yes").clicked() {
                                 *config = Config::default();
+                                config.profile.id = *selected_profile;
+                                config.save();
                                 *showing_dialog = false;
                             }
                             if ui.button("Cancel").clicked() {

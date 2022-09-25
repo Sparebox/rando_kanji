@@ -4,14 +4,16 @@ use std::{
     fs::File,
     io::{BufReader, BufWriter},
     path::Path,
-    time::{Duration, SystemTime},
+    time::{Duration, SystemTime}, fmt::Display,
 };
 
 use serde::{Deserialize, Serialize};
 
+use crate::app::App;
+
 #[derive(Serialize, Deserialize)]
 pub struct Config {
-    pub profile: ConfigProfile,
+    pub profile: Profile,
     pub button_text_option: ButtonTextOption,
     pub learning_index_threshold: i32, // Value of learning index for a kanji to be considered learned
     pub kanji_pool_max_size: u32,      // Size of the kanji pool at the start of a new pool cycle
@@ -21,7 +23,7 @@ pub struct Config {
 impl Config {
     pub const REVIEW_INTERVAL_STEP: Duration = Duration::from_secs(Self::minutes_to_seconds(5)); // Time step to increase time between review intervals
 
-    pub fn from_file(path: &str) -> Result<Config, Box<dyn Error>> {
+    fn from_file(path: &str) -> Result<Config, Box<dyn Error>> {
         let path = Path::new(path);
         let file = File::open(path)?;
         let reader = BufReader::new(file);
@@ -29,7 +31,7 @@ impl Config {
         Ok(config)
     }
 
-    pub fn to_file(&self, path: &str) {
+    fn to_file(&self, path: &str) {
         let path = Path::new(path);
         match File::create(path) {
             Ok(file) => {
@@ -38,6 +40,38 @@ impl Config {
             }
             Err(err) => eprintln!("Error saving configuration: {}", err),
         };
+    }
+
+    fn get_filename(profile: ProfileEnum) -> String {
+        match profile {
+            crate::config::ProfileEnum::Profile1 => format!("{}{}{}", App::CONFIG_PATH, 1, App::CONFIG_FILE_EXTENSION),
+            crate::config::ProfileEnum::Profile2 => format!("{}{}{}", App::CONFIG_PATH, 2, App::CONFIG_FILE_EXTENSION),
+            crate::config::ProfileEnum::Profile3 => format!("{}{}{}", App::CONFIG_PATH, 3, App::CONFIG_FILE_EXTENSION),
+        }
+    }
+
+    fn filename(&self) -> String {
+        Self::get_filename(self.profile.id)
+    }
+
+    pub fn save(&self) {
+        self.to_file(&self.filename());
+    }
+
+    pub fn load_from_file() -> Self {
+        for i in 1..=3 {
+            if let Ok(mut config) = Self::from_file(format!("{}{}{}", App::CONFIG_PATH, i, App::CONFIG_FILE_EXTENSION).as_str()) {
+                config.reset_review_times();
+                return config;
+            }
+        }
+        eprintln!("Could not load config from file");
+        Self::default()
+    }
+
+    pub fn try_load_by_profile(profile: ProfileEnum) -> Result<Config, Box<dyn Error>> {
+        let filename = Self::get_filename(profile);
+        Self::from_file(&filename)
     }
 
     pub fn reset_review_times(&mut self) {
@@ -58,7 +92,7 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         Config {
-            profile: ConfigProfile::Profile1, 
+            profile: Profile::default(), 
             button_text_option: ButtonTextOption::Kana,
             learning_index_threshold: 5,
             kanji_pool_max_size: 10,
@@ -92,10 +126,36 @@ pub enum ButtonTextOption {
     Meaning,
 }
 
-#[derive(Serialize, Deserialize, Clone, Copy)]
+#[derive(Serialize, Deserialize, PartialEq, Eq)]
+pub struct Profile {
+    pub name: String,
+    pub id: ProfileEnum,
+}
+
+impl Default for Profile {
+    fn default() -> Self {
+        Self { 
+            name: "Default profile".to_string(),
+            id: ProfileEnum::Profile1,
+        }
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
-pub enum ConfigProfile {
+pub enum ProfileEnum {
     Profile1,
     Profile2,
     Profile3,
+}
+
+impl Display for ProfileEnum {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ProfileEnum::Profile1 => write!(f, "Profile 1"),
+            ProfileEnum::Profile2 => write!(f, "Profile 2"),
+            ProfileEnum::Profile3 => write!(f, "Profile 3"),
+        }
+        
+    }
 }
