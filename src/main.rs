@@ -30,11 +30,12 @@ fn main() {
             }
             app.is_switching_state = false;
         }
-
-        app.window.clear(App::BACKGROUND_COLOR);
         window::handle_events(&mut app);
         if app.current_state == GameState::Menu { // Update falling kanji animation in the background
             kanji_fall.update(&mut app.texts, &app.kanji_dealer.kanjis);
+            app.window.clear(App::MENU_BACKGROUND_COLOR);
+        } else {
+            app.window.clear(App::GAME_BACKGROUND_COLOR);
         }
         app.draw();
         ui::draw(&mut app);

@@ -41,7 +41,8 @@ impl<'a> App<'a> {
     pub const MEANING_WORD_LIMIT: u8 = 5;
     pub const FONT_SIZE: u32 = 50;
     pub const INIT_WIN_SIZE: Vector2u = Vector2u::new(1600, 900);
-    pub const BACKGROUND_COLOR: Color = Color::rgb(10, 10, 10);
+    pub const GAME_BACKGROUND_COLOR: Color = Color::rgb(10, 10, 10);
+    pub const MENU_BACKGROUND_COLOR: Color = Color::BLACK;
     pub const KANJI_DB_PATH: &'static str = "res/kanji_db.csv";
     pub const FONT_PATH: &'static str = "res/font/Honoka-Shin-Antique-Maru_R.otf";
     pub const CONFIG_PATH: &'static str = "./config";

@@ -35,8 +35,6 @@ pub fn handle_events(app: &mut App) {
 }
 
 pub mod ui {
-    use std::time::SystemTime;
-
     use egui_sfml::egui::{self, style::Margin, Context, FontFamily, FontId, TextStyle};
     use sfml::{
         graphics::{
@@ -150,7 +148,7 @@ pub mod ui {
         egui::CentralPanel::default()
             .frame(
                 egui::Frame::none()
-                .fill(egui::Color32::from_rgb(App::BACKGROUND_COLOR.r, App::BACKGROUND_COLOR.g, App::BACKGROUND_COLOR.b))
+                .fill(egui::Color32::from_rgb(App::MENU_BACKGROUND_COLOR.r, App::MENU_BACKGROUND_COLOR.g, App::MENU_BACKGROUND_COLOR.b))
                 .inner_margin(Margin { left: 25.0, right: 0.0 , top: 0.0, bottom: 0.0 }))
             .show(ctx, |ui| {
                 if *showing_dialog {
@@ -282,7 +280,7 @@ pub mod ui {
         pub pos: Vector2f,
         pub bounds: Rect<f32>,
         pub color: Color,
-        pub font_base_size: u32,
+        pub font_size: u32,
         pub center: bool,
         pub timer: Timer,
     }
@@ -294,7 +292,7 @@ pub mod ui {
                 pos,
                 bounds: Rect::default(),
                 color,
-                font_base_size: 0,
+                font_size: 0,
                 center,
                 timer: Timer::default(),
             }
@@ -304,7 +302,7 @@ pub mod ui {
             sf_text.set_string(&self.string);
             sf_text.set_position(self.pos);
             sf_text.set_fill_color(self.color);
-            sf_text.set_character_size(self.font_base_size + App::FONT_SIZE);
+            sf_text.set_character_size(self.font_size);
             self.bounds = sf_text.global_bounds();
             if self.center {
                 let width = sf_text.global_bounds().width;

@@ -5,28 +5,30 @@ use crate::{window::ui::TextDescriptor, app::App, kanji::KanjiRecord, game_state
 
 pub struct KanjiFall {
     spawn_timer: Timer,
-    columns: Vec<Column>,
+    columns: [Column; Self::COLUMNS_NUM as usize],
 }
 
 impl KanjiFall {
     const COLUMN_WIDTH: u32 = 50;
     const COLUMNS_NUM: u32 = App::INIT_WIN_SIZE.x / Self::COLUMN_WIDTH as u32;
     const MAX_MOVEMENT_SPEED: f32 = 5.0;
-    const MAX_NUMBER_OF_KANJI: u8 = 20;
-    const MAX_TAIL_LENGHT: u8 = 5;
-    const TAIL_MARGIN: Vector2f = Vector2f::new(0.0, 50.0);
-    const DROP_INTERVAL_SECS: f32 = 0.5;
-    const BLINK_INTERVAL_SECS: f32 = 1.0;
+    const MAX_TAIL_LENGHT: u8 = 50;
+    const MIN_TAIL_LENGHT: u8 = 20;
+    const TAIL_MARGIN: Vector2f = Vector2f::new(0.0, 20.0);
+    const DROP_INTERVAL_SECS: f32 = 0.1;
+    const KANJI_BASE_COLOR: Color = Color::rgba(0, 255, 0, 128);
+    const KANJI_FONT_SIZE: u32 = 20;
+    const STARTING_Y: f32 = 100.0;
     
     pub fn new() -> Self {
         Self {
             spawn_timer: Timer::new(Self::DROP_INTERVAL_SECS),
-            columns: vec![Column::default(); Self::COLUMNS_NUM as usize],
+            columns: [Column::default(); Self::COLUMNS_NUM as usize],
         }
     }
 
     pub fn add_to_fall(&mut self, texts: &mut Vec<TextDescriptor>, kanji: &[KanjiRecord]) {
-        if texts.len() == Self::MAX_NUMBER_OF_KANJI as usize || !self.spawn_timer.check() {
+        if !self.spawn_timer.check() {
             return;
         }
         let random_column = rand::thread_rng().sample(Uniform::from(0..Self::COLUMNS_NUM));
@@ -37,10 +39,9 @@ impl KanjiFall {
             self.columns[random_column as usize].is_in_use = true;
         }
         
-        let random_pos = Vector2f::new((random_column * Self::COLUMN_WIDTH) as f32, -30.0);
-        let color = Color::rgba(0, 255, 0, 128);
+        let random_pos = Vector2f::new((random_column * Self::COLUMN_WIDTH) as f32, Self::STARTING_Y);
         
-        texts.extend(Self::create_tail(random_pos, color, kanji));
+        texts.extend(Self::create_tail(random_pos, Self::KANJI_BASE_COLOR, kanji));
     }
 
     pub fn update(&mut self, texts: &mut Vec<TextDescriptor>, kanji: &[KanjiRecord]) {
@@ -57,7 +58,21 @@ impl KanjiFall {
                     .unwrap()
                     .kanji
                     .to_string();
+                text.color = Color::WHITE;
             }
+            
+            if let Some(diff) = text.color.r.checked_sub(3) {
+                text.color.r = diff;
+            }
+            if let Some(diff) = text.color.b.checked_sub(3) {
+                text.color.b = diff;
+            }
+            if let Some(diff) = text.color.a.checked_sub(3) {
+                text.color.a = diff;
+            } else {
+                text.color.a = 0;
+            }
+            
         }
         
         for column in self.columns.iter_mut() {
@@ -71,14 +86,14 @@ impl KanjiFall {
 
     fn create_tail(mut head_pos: Vector2f, color: Color, kanji: &[KanjiRecord]) -> Vec<TextDescriptor> {
         let mut tail: Vec<TextDescriptor> = Vec::new();
-        let tail_length = rand::thread_rng().sample(Uniform::from(0..Self::MAX_TAIL_LENGHT));
+        let tail_length = rand::thread_rng().sample(Uniform::from(Self::MIN_TAIL_LENGHT..Self::MAX_TAIL_LENGHT));
         let mut random_kanji: String;
         let mut text: TextDescriptor;
-        // tail.push(head_text);
         for i in 0..=tail_length {
             random_kanji = kanji.iter().choose(&mut rand::thread_rng()).unwrap().kanji.to_string();
             text = TextDescriptor::new(&random_kanji, head_pos, color, true);
-            text.timer.set_duration(Self::BLINK_INTERVAL_SECS + i as f32);
+            text.font_size = Self::KANJI_FONT_SIZE;
+            text.timer.set_duration((tail_length - i) as f32 / 2.0 + 1.0);
             tail.push(text);
             head_pos -= Self::TAIL_MARGIN;
         }
@@ -86,7 +101,7 @@ impl KanjiFall {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy)]
 struct Column {
     is_in_use: bool,
     timer: Timer,

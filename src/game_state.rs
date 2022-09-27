@@ -32,7 +32,7 @@ impl GameState {
             Color::WHITE,
             true,
         );
-        title.font_base_size = 10;
+        title.font_size = App::FONT_SIZE;
         app.texts.push(title);
     }
 
@@ -52,7 +52,7 @@ impl GameState {
             Color::WHITE,
             true,
         );
-        kanji_text.font_base_size = 50;
+        kanji_text.font_size = 50 + App::FONT_SIZE;
         app.texts.push(kanji_text);
 
         let mut last_btn_height = 0.0;
@@ -76,7 +76,7 @@ impl GameState {
             };
 
             let pos = Vector2f::new(app.window.size().x as f32 / 2.0, 200.0 + last_btn_height);
-            let button = TextButton::new(
+            let mut button = TextButton::new(
                 &button_string,
                 pos,
                 Color::WHITE,
@@ -88,6 +88,7 @@ impl GameState {
                     kanji: candidates[correct_index as usize].kanji,
                 }),
             );
+            button.text.font_size = App::FONT_SIZE;
             last_btn_height = (i + 1) as f32 * (button.get_height() + 50.0);
             app.buttons.borrow_mut().push(button);
         }
