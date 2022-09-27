@@ -73,7 +73,7 @@ pub mod ui {
                 &mut app.showing_confirm_dialog,
                 ctx,
             ),
-        });
+        }).unwrap();
         app.egui.draw(&mut app.window, None);
     }
 
@@ -202,6 +202,8 @@ pub mod ui {
                 ui.with_layout(egui::Layout::bottom_up(egui::Align::Center), |ui| {
                     ui.add_space(20.0);
                     if ui.button("Back").clicked() {
+                        Config::reset_last_used();
+                        config.was_used_last = true;
                         *state = GameState::Menu;
                         *is_switching_state = true;
                     }

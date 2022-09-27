@@ -41,6 +41,6 @@ fn main() {
         ui::draw(&mut app);
         app.window.display();
     }
-    // Save configurations to disk
+    // Save current profile configurations to disk
     app.config.save();
 }

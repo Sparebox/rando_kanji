@@ -21,6 +21,8 @@ pub struct KanjiRecord {
 }
 
 impl KanjiRecord {
+    const MAX_STRING_LENGTH: usize = 100;
+
     pub fn from_csv(path: &Path) -> Result<Vec<KanjiRecord>, csv::Error> {
         let mut reader = csv::ReaderBuilder::new().delimiter(b';').from_path(path)?;
         reader
@@ -33,31 +35,38 @@ impl KanjiRecord {
     }
 
     pub fn as_meaning(&self) -> String { // Todo: improve parsing
-        let built_string = if self.on_trans.trim() == self.kun_trans.trim() {
-            self.on_trans.trim().to_string()
+        let mut left_part = String::new();
+        let mut right_part = String::new();
+        let built_string ;
+
+        if self.on_trans.trim() != "-" {
+            left_part = self.on_trans.trim().to_string();
+        } 
+        if self.kun_trans.trim() != "-" {
+            right_part = self.kun_trans.trim().to_string();
+        } 
+
+        if !left_part.is_empty() && !right_part.is_empty() {
+            if self.on_trans.trim() == self.kun_trans.trim() {
+                built_string = self.on_trans.trim().to_string();
+            } else {
+                built_string = self.on_trans.trim().to_string() + "; " + self.kun_trans.trim();
+            }
+        } else if !left_part.is_empty() {
+            built_string = left_part;
         } else {
-            self.on_trans.trim().to_string() + "; " + self.kun_trans.trim()
-        };
-
-        if !built_string.contains(',') { // If cannot be split up
-            return built_string;
+            built_string = right_part;
         }
 
-        let split_meanings = built_string.split(',');
-        let mut limited_string = String::new();
-        for (i, meaning) in split_meanings.into_iter().enumerate() {
-            if meaning.contains('-') {
-                continue;
+        if built_string.len() > Self::MAX_STRING_LENGTH {
+            for (i, char) in built_string.chars().rev().enumerate() {
+                if char == ';' || char == ',' {
+                    return built_string[0..i].to_string();
+                }
             }
-            if i as u8 == App::MEANING_WORD_LIMIT {
-                break;
-            }
-            limited_string.push_str(meaning);
-            if i as u8 != App::MEANING_WORD_LIMIT - 1 { // Don't add a comma at the end of the list
-                limited_string.push_str(", ");
-            } 
         }
-        limited_string
+        println!("Built string: {}", built_string);
+        built_string
     }
 
     pub fn update_review_date(&self, config: &mut Config) {

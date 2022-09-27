@@ -36,9 +36,8 @@ pub struct App<'a> {
 }
 
 impl<'a> App<'a> {
-    pub const GAME_FPS_LIMIT: u32 = 10;
+    pub const GAME_FPS_LIMIT: u32 = 30;
     pub const MENU_FPS_LIMIT: u32 = 30;
-    pub const MEANING_WORD_LIMIT: u8 = 5;
     pub const FONT_SIZE: u32 = 50;
     pub const INIT_WIN_SIZE: Vector2u = Vector2u::new(1600, 900);
     pub const GAME_BACKGROUND_COLOR: Color = Color::rgb(10, 10, 10);
