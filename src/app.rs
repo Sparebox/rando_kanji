@@ -36,7 +36,8 @@ pub struct App<'a> {
 }
 
 impl<'a> App<'a> {
-    pub const FPS_LIMIT: u32 = 30;
+    pub const GAME_FPS_LIMIT: u32 = 10;
+    pub const MENU_FPS_LIMIT: u32 = 30;
     pub const MEANING_WORD_LIMIT: u8 = 5;
     pub const FONT_SIZE: u32 = 50;
     pub const INIT_WIN_SIZE: Vector2u = Vector2u::new(1600, 900);
@@ -127,9 +128,8 @@ impl<'a> App<'a> {
                 self.set_view_zoom(1.1);
             }
             if check_press {
-                match button.check_for_mouse_press(mapped_mouse_pos) {
-                    Some(CheckAnswer(data)) => self.check_answer(button, &data),
-                    None => {}
+                if let Some(CheckAnswer(data)) = button.check_for_mouse_press(mapped_mouse_pos) {
+                    self.check_answer(button, &data)
                 }
             } else {
                 button.check_for_mouse_hover(mapped_mouse_pos);
@@ -151,8 +151,8 @@ impl<'a> App<'a> {
             self.window.draw(&text);
         }
         // Draw game text buttons
+        self.window.set_view(&self.game_view);
         for button in self.buttons.borrow_mut().iter_mut() {
-            self.window.set_view(&self.game_view);
             button.draw(&mut self.window, &mut text);
         }
     }

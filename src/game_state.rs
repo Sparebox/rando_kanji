@@ -9,7 +9,7 @@ use crate::{
     window::ui::{AnswerData, ButtonAction, TextButton, TextDescriptor},
 };
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 #[repr(u8)]
 pub enum GameState {
     Menu,
@@ -18,13 +18,16 @@ pub enum GameState {
 }
 
 impl GameState {
+    pub const MENU_TITLE: &'static str = "Rando Kanji ・ ランド漢字";
+
     pub fn init_menu_state(app: &mut App) {
+        app.window.set_framerate_limit(App::MENU_FPS_LIMIT);
         app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();
 
         let mut title = TextDescriptor::new(
-            "Rando Kanji ・ ランド漢字",
+            Self::MENU_TITLE,
             Vector2f::new(app.window.size().x as f32 / 2.0, 100.0),
             Color::WHITE,
             true,
@@ -34,6 +37,7 @@ impl GameState {
     }
 
     pub fn init_play_state(app: &mut App) {
+        app.window.set_framerate_limit(App::GAME_FPS_LIMIT);
         app.reset_zoom();
         app.texts.clear();
         app.buttons.borrow_mut().clear();

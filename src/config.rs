@@ -9,7 +9,7 @@ use std::{
 
 use serde::{Deserialize, Serialize};
 
-use crate::app::App;
+use crate::{app::App};
 
 #[derive(Serialize, Deserialize)]
 pub struct Config {
@@ -44,9 +44,9 @@ impl Config {
 
     fn get_filename(profile: ProfileEnum) -> String {
         match profile {
-            crate::config::ProfileEnum::Profile1 => format!("{}{}{}", App::CONFIG_PATH, 1, App::CONFIG_FILE_EXTENSION),
-            crate::config::ProfileEnum::Profile2 => format!("{}{}{}", App::CONFIG_PATH, 2, App::CONFIG_FILE_EXTENSION),
-            crate::config::ProfileEnum::Profile3 => format!("{}{}{}", App::CONFIG_PATH, 3, App::CONFIG_FILE_EXTENSION),
+            ProfileEnum::Profile1 => format!("{}{}{}", App::CONFIG_PATH, 1, App::CONFIG_FILE_EXTENSION),
+            ProfileEnum::Profile2 => format!("{}{}{}", App::CONFIG_PATH, 2, App::CONFIG_FILE_EXTENSION),
+            ProfileEnum::Profile3 => format!("{}{}{}", App::CONFIG_PATH, 3, App::CONFIG_FILE_EXTENSION),
         }
     }
 

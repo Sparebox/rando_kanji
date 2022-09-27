@@ -13,7 +13,7 @@ pub fn init() -> RenderWindow {
         Style::CLOSE,
         &Default::default(),
     );
-    window.set_framerate_limit(App::FPS_LIMIT);
+    window.set_framerate_limit(App::GAME_FPS_LIMIT);
     window
 }
 
@@ -35,6 +35,8 @@ pub fn handle_events(app: &mut App) {
 }
 
 pub mod ui {
+    use std::time::SystemTime;
+
     use egui_sfml::egui::{self, style::Margin, Context, FontFamily, FontId, TextStyle};
     use sfml::{
         graphics::{
@@ -47,7 +49,7 @@ pub mod ui {
     use crate::{
         app::App,
         config::{ButtonTextOption, Config, ProfileEnum},
-        game_state::GameState::{self},
+        game_state::GameState::{self}, utils::Timer,
     };
 
     pub fn draw(app: &mut App) {
@@ -157,7 +159,7 @@ pub mod ui {
                 ui.with_layout(egui::Layout::top_down(egui::Align::LEFT), |ui| {
                     ui.add_space(20.0);
 
-                    ui.radio_value(&mut config.button_text_option, ButtonTextOption::Romaji, "Show Rōmaji ローマ字");
+                    ui.radio_value(&mut config.button_text_option, ButtonTextOption::Romaji, "Show rōmaji ローマ字");
                     ui.radio_value(&mut config.button_text_option, ButtonTextOption::Meaning, "Show meaning 意味表示");
                     ui.radio_value(&mut config.button_text_option, ButtonTextOption::Kana, "Show kana カナ");
 
@@ -282,6 +284,7 @@ pub mod ui {
         pub color: Color,
         pub font_base_size: u32,
         pub center: bool,
+        pub timer: Timer,
     }
 
     impl TextDescriptor {
@@ -293,6 +296,7 @@ pub mod ui {
                 color,
                 font_base_size: 0,
                 center,
+                timer: Timer::default(),
             }
         }
 
