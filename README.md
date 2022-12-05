@@ -5,3 +5,6 @@ Based loosely on spaced repetition. Kanji will be shown based on how well you re
 
 ## Framework
 This app is built with the Rust binding for the SFML framework [SFML homepage](https://www.sfml-dev.org/).
+
+## How to run
+Only available for Windows for now. Download a release, extract it and run rando_kanji.exe.
